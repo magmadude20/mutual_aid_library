@@ -1,23 +1,139 @@
-import logo from './logo.svg';
+import { useEffect, useState } from 'react';
+import { supabase } from './lib/supabaseClient';
 import './App.css';
 
 function App() {
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [formError, setFormError] = useState(null);
+
+  useEffect(() => {
+    async function fetchItems() {
+      try {
+        setLoading(true);
+        setError(null);
+        const { data, error: fetchError } = await supabase
+          .from('items')
+          .select('id, name, description');
+
+        if (fetchError) throw fetchError;
+        setItems(data ?? []);
+        // If you have rows in DB but see 0 here, check Supabase RLS: Table Editor → items → RLS policies → add "Allow read" for anon
+        if ((data?.length ?? 0) === 0) {
+          console.log('Supabase returned 0 items. If you have data, add an RLS policy that allows SELECT.');
+        }
+      } catch (err) {
+        setError(err.message || 'Failed to load items.');
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchItems();
+  }, []);
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    const trimmedName = name.trim();
+    if (!trimmedName) {
+      setFormError('Name is required.');
+      return;
+    }
+    setFormError(null);
+    setSubmitting(true);
+    try {
+      const { data, error: insertError } = await supabase
+        .from('items')
+        .insert({ name: trimmedName, description: description.trim() || null })
+        .select('id, name, description')
+        .single();
+
+      if (insertError) throw insertError;
+      setItems((prev) => [data, ...prev]);
+      setName('');
+      setDescription('');
+    } catch (err) {
+      setFormError(err.message || 'Failed to add item.');
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
   return (
     <div className="App">
       <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
+        <h1>Inventory</h1>
       </header>
+      <main className="App-main">
+        <form className="add-item-form" onSubmit={handleSubmit} aria-label="Add item">
+          <h2 className="form-title">Add item</h2>
+          {formError && (
+            <p className="form-error" role="alert">
+              {formError}
+            </p>
+          )}
+          <label className="form-label" htmlFor="item-name">
+            Name
+          </label>
+          <input
+            id="item-name"
+            type="text"
+            className="form-input"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Item name"
+            required
+            disabled={submitting}
+            autoComplete="off"
+          />
+          <label className="form-label" htmlFor="item-description">
+            Description (optional)
+          </label>
+          <textarea
+            id="item-description"
+            className="form-input form-textarea"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="Description"
+            rows={3}
+            disabled={submitting}
+          />
+          <button type="submit" className="form-submit" disabled={submitting}>
+            {submitting ? 'Adding…' : 'Add item'}
+          </button>
+        </form>
+
+        {loading && <p className="status">Loading items…</p>}
+        {error && (
+          <p className="status error" role="alert">
+            {error}
+          </p>
+        )}
+        {!loading && !error && items.length === 0 && (
+          <p className="status">
+            No items returned. If you have rows in the table, check{' '}
+            <strong>Row Level Security (RLS)</strong> in Supabase: Table Editor →{' '}
+            <code>items</code> → RLS policies → add a policy that allows{' '}
+            <code>SELECT</code> for the anon role.
+          </p>
+        )}
+        {!loading && !error && items.length > 0 && (
+          <ul className="items-list" aria-label="Inventory items">
+            {items.map((item) => (
+              <li key={item.id} className="item-card">
+                <div className="item-name">{item.name}</div>
+                {item.description && (
+                  <div className="item-description">{item.description}</div>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
+      </main>
     </div>
   );
 }

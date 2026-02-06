@@ -1,6 +1,30 @@
-# Getting Started with Create React App
+# Mutual Aid Library – Inventory Management
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+React app connected to Supabase for inventory management. The app lists all items from the database.
+
+## Supabase setup
+
+1. **Create a Supabase project** at [supabase.com](https://supabase.com) and get your project URL and anon key (Project Settings → API).
+
+2. **Create `.env.local`** in the project root with:
+   ```
+   REACT_APP_SUPABASE_URL=https://your-project.supabase.co
+   REACT_APP_SUPABASE_ANON_KEY=your-anon-key
+   ```
+
+3. **Create the `items` table** in the Supabase SQL Editor (if needed):
+   ```sql
+   create table items (
+     id uuid primary key default gen_random_uuid(),
+     name text not null,
+     description text
+   );
+
+   alter table items enable row level security;
+   create policy "Allow public read" on items for select using (true);
+   ```
+
+4. Restart the dev server after changing env vars (`npm start`).
 
 ## Available Scripts
 

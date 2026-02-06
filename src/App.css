@@ -5,14 +5,47 @@
 }
 
 .App-header {
-  padding: 1.5rem 1rem;
+  padding: 1rem 1rem 0;
   border-bottom: 1px solid #3a3f47;
 }
 
 .App-header h1 {
-  margin: 0;
+  margin: 0 0 1rem;
   font-size: 1.5rem;
   font-weight: 600;
+}
+
+.tabs {
+  display: flex;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tab {
+  padding: 0.5rem 1rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #9ca3af;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  margin-bottom: -1px;
+}
+
+.tab:hover {
+  color: #e4e6eb;
+}
+
+.tab-active {
+  color: #60a5fa;
+  border-bottom-color: #60a5fa;
+}
+
+.tab-panel {
+  outline: none;
 }
 
 .App-main {
@@ -78,6 +111,22 @@
   min-height: 4rem;
 }
 
+.form-map-section {
+  margin-top: 1rem;
+}
+
+.location-picker-wrapper {
+  height: 280px;
+  width: 100%;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid #3a3f47;
+}
+
+.location-picker-map {
+  border-radius: 6px;
+}
+
 .form-submit {
   margin-top: 1rem;
   padding: 0.5rem 1rem;
@@ -136,4 +185,39 @@
   font-size: 0.875rem;
   color: #b0b4bb;
   line-height: 1.4;
+}
+
+.item-coords {
+  font-size: 0.8rem;
+  color: #9ca3af;
+  margin-top: 0.25rem;
+}
+
+.map-section {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #3a3f47;
+}
+
+.map-section-title {
+  margin: 0 0 0.75rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.map-wrapper {
+  height: 400px;
+  width: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #3a3f47;
+}
+
+.map-container {
+  border-radius: 8px;
+}
+
+.map-popup-description {
+  font-size: 0.9rem;
+  color: #374151;
 }

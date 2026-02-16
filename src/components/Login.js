@@ -1,0 +1,105 @@
+import { useState } from 'react';
+import { supabase } from '../lib/supabaseClient';
+
+function Login() {
+  const [mode, setMode] = useState('login'); // 'login' | 'signup'
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [message, setMessage] = useState('');
+
+  async function handleSubmit(event) {
+    event.preventDefault();
+    setError(null);
+    setMessage('');
+    setLoading(true);
+    try {
+      if (mode === 'login') {
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+        if (signInError) throw signInError;
+        // Session listener in App will pick up the change.
+      } else {
+        const { error: signUpError } = await supabase.auth.signUp({
+          email,
+          password,
+        });
+        if (signUpError) throw signUpError;
+        setMessage('Check your email to confirm your account (if confirmations are enabled).');
+      }
+    } catch (err) {
+      setError(err.message || 'Something went wrong. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div className="auth-page">
+      <div className="auth-card">
+        <h1 className="auth-title">Sign in</h1>
+        <div className="auth-toggle">
+          <button
+            type="button"
+            className={`auth-toggle-button ${mode === 'login' ? 'auth-toggle-active' : ''}`}
+            onClick={() => setMode('login')}
+          >
+            Log in
+          </button>
+          <button
+            type="button"
+            className={`auth-toggle-button ${mode === 'signup' ? 'auth-toggle-active' : ''}`}
+            onClick={() => setMode('signup')}
+          >
+            Sign up
+          </button>
+        </div>
+        <form onSubmit={handleSubmit} className="auth-form" aria-label={mode === 'login' ? 'Log in' : 'Sign up'}>
+          {error && (
+            <p className="form-error" role="alert">
+              {error}
+            </p>
+          )}
+          {message && <p className="auth-message">{message}</p>}
+          <label className="form-label" htmlFor="auth-email">
+            Email
+          </label>
+          <input
+            id="auth-email"
+            type="email"
+            className="form-input"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="you@example.org"
+            required
+            disabled={loading}
+            autoComplete="email"
+          />
+          <label className="form-label" htmlFor="auth-password">
+            Password
+          </label>
+          <input
+            id="auth-password"
+            type="password"
+            className="form-input"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="••••••••"
+            required
+            disabled={loading}
+            autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+          />
+          <button type="submit" className="form-submit auth-submit" disabled={loading}>
+            {loading ? (mode === 'login' ? 'Logging in…' : 'Signing up…') : mode === 'login' ? 'Log in' : 'Sign up'}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+export default Login;
+

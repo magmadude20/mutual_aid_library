@@ -4,6 +4,7 @@ import Map from './components/Map';
 import LocationPicker from './components/LocationPicker';
 import Login from './components/Login';
 import Profile from './components/Profile';
+import Owner from './components/Owner';
 import './App.css';
 
 const DEFAULT_LAT = 36.16473;
@@ -17,7 +18,8 @@ function App() {
   const [description, setDescription] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState(null);
-  const [activeTab, setActiveTab] = useState('items'); // 'items' | 'myitems' | 'add'
+  const [activeTab, setActiveTab] = useState('items'); // 'items' | 'myitems'
+  const [showAddForm, setShowAddForm] = useState(false);
   const [latitude, setLatitude] = useState(DEFAULT_LAT);
   const [longitude, setLongitude] = useState(DEFAULT_LNG);
   const [session, setSession] = useState(null);
@@ -28,8 +30,6 @@ function App() {
   const [myItemsError, setMyItemsError] = useState(null);
   const [showSettings, setShowSettings] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
-  const [ownerName, setOwnerName] = useState(null);
-  const [ownerLoading, setOwnerLoading] = useState(false);
   const [editingItem, setEditingItem] = useState(false);
   const [editName, setEditName] = useState('');
   const [editDescription, setEditDescription] = useState('');
@@ -140,37 +140,6 @@ function App() {
     };
   }, [user?.id]);
 
-  // When viewing an item detail, fetch the owner's display name from profiles
-  useEffect(() => {
-    if (!selectedItem?.user_id) {
-      setOwnerName(null);
-      return;
-    }
-    let isMounted = true;
-    setOwnerLoading(true);
-    setOwnerName(null);
-    (async () => {
-      try {
-        const { data, error: fetchError } = await supabase
-          .from('profiles')
-          .select('full_name')
-          .eq('id', selectedItem.user_id)
-          .maybeSingle();
-        if (!isMounted) return;
-        if (fetchError) throw fetchError;
-        setOwnerName(data?.full_name?.trim() || null);
-      } catch {
-        if (!isMounted) return;
-        setOwnerName(null);
-      } finally {
-        if (isMounted) setOwnerLoading(false);
-      }
-    })();
-    return () => {
-      isMounted = false;
-    };
-  }, [selectedItem?.user_id]);
-
   async function handleSubmit(e) {
     e.preventDefault();
     const trimmedName = name.trim();
@@ -199,6 +168,7 @@ function App() {
       setDescription('');
       setLatitude(DEFAULT_LAT);
       setLongitude(DEFAULT_LNG);
+      setShowAddForm(false);
     } catch (err) {
       setFormError(err.message || 'Failed to add item.');
     } finally {
@@ -212,8 +182,8 @@ function App() {
 
   function switchTab(tab) {
     setSelectedItem(null);
-    setOwnerName(null);
     setEditingItem(false);
+    setShowAddForm(false);
     setDeleteConfirmOpen(false);
     setDeleteError(null);
     setActiveTab(tab);
@@ -289,7 +259,6 @@ function App() {
       setItems((prev) => prev.filter((i) => i.id !== selectedItem.id));
       setMyItems((prev) => prev.filter((i) => i.id !== selectedItem.id));
       setSelectedItem(null);
-      setOwnerName(null);
       setDeleteConfirmOpen(false);
     } catch (err) {
       setDeleteError(err.message || 'Failed to delete item.');
@@ -320,7 +289,7 @@ function App() {
     <div className="App">
       <header className="App-header">
         <div className="App-header-top">
-          <h1>Inventory</h1>
+          <h1>Mutual Aid Library of Things</h1>
           <div className="App-header-user">
             <span className="App-header-email">{user?.email}</span>
             <button
@@ -359,17 +328,6 @@ function App() {
           >
             My items
           </button>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={activeTab === 'add'}
-            aria-controls="add-panel"
-            id="add-tab"
-            className={`tab ${activeTab === 'add' ? 'tab-active' : ''}`}
-            onClick={() => switchTab('add')}
-          >
-            Add item
-          </button>
         </nav>
         )}
       </header>
@@ -393,7 +351,6 @@ function App() {
                 className="back-link"
                 onClick={() => {
                   setSelectedItem(null);
-                  setOwnerName(null);
                   setEditingItem(false);
                   setDeleteConfirmOpen(false);
                   setDeleteError(null);
@@ -420,6 +377,7 @@ function App() {
                 </div>
               )}
             </div>
+            <h3 className="map-section-title">Item</h3>
             <article className="item-detail" aria-label={`Item: ${selectedItem.name}`}>
               {editingItem ? (
                 <form onSubmit={handleEditSave} className="item-detail-edit-form">
@@ -487,18 +445,11 @@ function App() {
               ) : (
                 <>
                   <h2 className="item-detail-name">{selectedItem.name}</h2>
-                  {selectedItem.description && (
-                    <p className="item-detail-description">{selectedItem.description}</p>
-                  )}
-                  <div className="item-detail-owner">
-                    <span className="item-detail-owner-label">Owner: </span>
-                    {ownerLoading ? (
-                      <span className="item-detail-owner-value">Loading…</span>
-                    ) : (
-                      <span className="item-detail-owner-value">
-                        {ownerName || 'Unknown'}
-                      </span>
-                    )}
+                  <div className="item-detail-description-row">
+                    <span className="item-detail-prefix">Description</span>
+                    <span className="item-detail-description-value">
+                      {selectedItem.description || '—'}
+                    </span>
                   </div>
                   {selectedItem.latitude != null &&
                    selectedItem.longitude != null &&
@@ -514,6 +465,7 @@ function App() {
                 </>
               )}
             </article>
+            <Owner userId={selectedItem.user_id} />
             {deleteConfirmOpen && (
               <div
                 className="modal-overlay"
@@ -564,7 +516,16 @@ function App() {
             aria-labelledby="myitems-tab"
             className="tab-panel"
           >
-            <h2 className="tab-panel-title">My items</h2>
+            <div className="my-items-header">
+              <h2 className="tab-panel-title">My items</h2>
+              <button
+                type="button"
+                className="form-submit my-items-add-button"
+                onClick={() => setShowAddForm(true)}
+              >
+                Add new item
+              </button>
+            </div>
             {myItemsLoading && <p className="status">Loading your items…</p>}
             {myItemsError && (
               <p className="status error" role="alert">
@@ -589,68 +550,72 @@ function App() {
                 ))}
               </ul>
             )}
-            {!myItemsLoading && !myItemsError && myItems.length === 0 && (
+            {!myItemsLoading && !myItemsError && myItems.length === 0 && !showAddForm && (
               <p className="status">You haven&apos;t added any items yet.</p>
             )}
-          </div>
-        )}
-
-        {activeTab === 'add' && (
-          <div
-            id="add-panel"
-            role="tabpanel"
-            aria-labelledby="add-tab"
-            className="tab-panel"
-          >
-            <form className="add-item-form" onSubmit={handleSubmit} aria-label="Add item">
-              <h2 className="form-title">Add item</h2>
-              {formError && (
-                <p className="form-error" role="alert">
-                  {formError}
-                </p>
-              )}
-              <label className="form-label" htmlFor="item-name">
-                Name
-              </label>
-              <input
-                id="item-name"
-                type="text"
-                className="form-input"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Item name"
-                required
-                disabled={submitting}
-                autoComplete="off"
-              />
-              <label className="form-label" htmlFor="item-description">
-                Description (optional)
-              </label>
-              <textarea
-                id="item-description"
-                className="form-input form-textarea"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Description"
-                rows={3}
-                disabled={submitting}
-              />
-              <div className="form-map-section">
-                <label className="form-label">Location (click map to set)</label>
-                <div className="location-picker-wrapper">
-                  <LocationPicker
-                    selectedPoint={{ lat: latitude, lng: longitude }}
-                    onSelect={(lat, lng) => {
-                      setLatitude(lat);
-                      setLongitude(lng);
-                    }}
+            {showAddForm && (
+              <div className="my-items-add-form-wrapper">
+                <form className="add-item-form" onSubmit={handleSubmit} aria-label="Add item">
+                  <h2 className="form-title">Add item</h2>
+                  {formError && (
+                    <p className="form-error" role="alert">
+                      {formError}
+                    </p>
+                  )}
+                  <label className="form-label" htmlFor="item-name">
+                    Name
+                  </label>
+                  <input
+                    id="item-name"
+                    type="text"
+                    className="form-input"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Item name"
+                    required
+                    disabled={submitting}
+                    autoComplete="off"
                   />
-                </div>
+                  <label className="form-label" htmlFor="item-description">
+                    Description (optional)
+                  </label>
+                  <textarea
+                    id="item-description"
+                    className="form-input form-textarea"
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder="Description"
+                    rows={3}
+                    disabled={submitting}
+                  />
+                  <div className="form-map-section">
+                    <label className="form-label">Location (click map to set)</label>
+                    <div className="location-picker-wrapper">
+                      <LocationPicker
+                        selectedPoint={{ lat: latitude, lng: longitude }}
+                        onSelect={(lat, lng) => {
+                          setLatitude(lat);
+                          setLongitude(lng);
+                        }}
+                      />
+                    </div>
+                  </div>
+                  <div className="add-item-form-actions">
+                    <button
+                      type="button"
+                      className="header-button"
+                      onClick={() => setShowAddForm(false)}
+                      disabled={submitting}
+                    >
+                      Cancel
+                    </button>
+                    <button type="submit" className="form-submit" disabled={submitting}>
+                      {submitting ? 'Adding…' : 'Add item'}
+                    </button>
+                  </div>
+                </form>
               </div>
-              <button type="submit" className="form-submit" disabled={submitting}>
-                {submitting ? 'Adding…' : 'Add item'}
-              </button>
-            </form>
+            )}
           </div>
         )}
 

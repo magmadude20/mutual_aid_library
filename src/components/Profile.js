@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabaseClient';
 
 function Profile({ user }) {
   const [fullName, setFullName] = useState('');
+  const [contactInfo, setContactInfo] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
@@ -17,13 +18,14 @@ function Profile({ user }) {
         setMessage('');
         const { data, error: fetchError } = await supabase
           .from('profiles')
-          .select('full_name')
+          .select('full_name, contact_info')
           .eq('id', user.id)
           .maybeSingle();
 
         if (fetchError) throw fetchError;
         if (!isMounted) return;
         setFullName(data?.full_name ?? '');
+        setContactInfo(data?.contact_info ?? '');
       } catch (err) {
         if (!isMounted) return;
         setError(err.message || 'Failed to load profile.');
@@ -47,6 +49,7 @@ function Profile({ user }) {
       const { error: upsertError } = await supabase.from('profiles').upsert({
         id: user.id,
         full_name: fullName.trim() || null,
+        contact_info: contactInfo.trim() ?? '',
       });
       if (upsertError) throw upsertError;
       setMessage('Profile saved.');
@@ -73,7 +76,7 @@ function Profile({ user }) {
             )}
             {message && <p className="profile-message">{message}</p>}
             <label className="form-label" htmlFor="full-name">
-              Name
+              Display name
             </label>
             <input
               id="full-name"
@@ -84,6 +87,19 @@ function Profile({ user }) {
               placeholder="Your name"
               disabled={saving}
               autoComplete="name"
+            />
+            <label className="form-label" htmlFor="contact-info">
+              Contact info
+            </label>
+            <p className="form-hint">recommended: signal username (<a href="https://signal.org/blog/phone-number-privacy-usernames/" target="_blank" rel="noopener noreferrer">more info</a>)</p>
+            <textarea
+              id="contact-info"
+              className="form-input form-textarea"
+              value={contactInfo}
+              onChange={(e) => setContactInfo(e.target.value)}
+              placeholder="How others can reach you"
+              rows={3}
+              disabled={saving}
             />
             <button type="submit" className="form-submit" disabled={saving}>
               {saving ? 'Saving…' : 'Save'}

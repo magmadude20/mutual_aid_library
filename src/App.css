@@ -61,7 +61,8 @@
   display: inline-block;
   margin-bottom: 1rem;
   padding: 0;
-  font-size: 0.9rem;
+  font-weight: 600;
+  font-size: 0.95rem;
   color: #60a5fa;
   background: none;
   border: none;
@@ -185,23 +186,80 @@
   font-weight: 600;
 }
 
-.item-detail-description {
+.item-detail-description-row {
   margin: 0 0 1rem;
-  color: #b0b4bb;
-  line-height: 1.5;
 }
 
-.item-detail-owner {
-  margin-bottom: 1rem;
+.item-detail-prefix {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 300;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #9ca3af;
+  margin-bottom: 0.2rem;
+}
+
+.item-detail-description-value {
+  font-size: 0.95rem;
+  color: #b0b4bb;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+.item-detail-owner-section {
+  margin-top: 1rem;
+}
+
+.owner-box {
+  background: #25282e;
+  border: 1px solid #3a3f47;
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+  margin-top: 0.5rem;
+}
+
+.item-detail-owner-loading {
+  margin: 0;
+  color: #9ca3af;
   font-size: 0.95rem;
 }
 
-.item-detail-owner-label {
-  color: #9ca3af;
+.owner-row {
+  margin: 0 0 0.5rem;
 }
 
-.item-detail-owner-value {
+.owner-row:last-child {
+  margin-bottom: 0;
+}
+
+.owner-prefix {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #9ca3af;
+  margin-bottom: 0.2rem;
+}
+
+.owner-prefix-contact {
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.owner-value {
+  font-size: 1rem;
+  font-weight: 600;
   color: #e4e6eb;
+}
+
+.owner-value-contact {
+  font-weight: 400;
+  font-size: 0.95rem;
+  color: #b0b4bb;
+  white-space: pre-wrap;
+  line-height: 1.4;
 }
 
 .item-detail-map-section {
@@ -322,6 +380,33 @@
   width: 100%;
 }
 
+.my-items-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.my-items-header .tab-panel-title {
+  margin: 0;
+}
+
+.my-items-add-button {
+  flex-shrink: 0;
+}
+
+.my-items-add-form-wrapper {
+  margin-top: 1rem;
+}
+e
+.add-item-form-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
 .add-item-form {
   background: #25282e;
   border: 1px solid #3a3f47;
@@ -344,21 +429,38 @@
 
 .form-label {
   display: block;
-  font-size: 0.875rem;
+  font-size: 0.95rem;
   font-weight: 500;
   color: #b0b4bb;
   margin-bottom: 0.35rem;
+  margin-top: 0.75rem;
 }
 
 .form-label + .form-label {
   margin-top: 0.75rem;
 }
 
+.form-hint {
+  font-size: 0.8125rem;
+  color: #9ca3af;
+  margin: 0.2rem 0 0.35rem;
+  line-height: 1.3;
+}
+
+.form-hint a {
+  color: #9ca3af;
+  text-decoration: underline;
+}
+
+.form-hint a:hover {
+  color: #b0b4bb;
+}
+
 .form-input {
   width: 100%;
   box-sizing: border-box;
   padding: 0.5rem 0.75rem;
-  font-size: 1rem;
+  font-size: 1.0625rem;
   color: #e4e6eb;
   background: #1a1d23;
   border: 1px solid #3a3f47;

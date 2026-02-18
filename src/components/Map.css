@@ -1,0 +1,28 @@
+.map-section {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #3a3f47;
+}
+
+.map-section-title {
+  margin: 0 0 0.75rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.map-wrapper {
+  height: 400px;
+  width: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #3a3f47;
+}
+
+.map-container {
+  border-radius: 8px;
+}
+
+.map-popup-description {
+  font-size: 0.9rem;
+  color: #374151;
+}

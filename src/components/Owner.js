@@ -43,11 +43,11 @@ function Owner({ userId }) {
   if (!userId) return null;
 
   return (
-    <section className="item-detail-owner-section" aria-label="Owner">
+    <section className="thing-detail-owner-section" aria-label="Owner">
       <h3 className="map-section-title">Owner</h3>
       <div className="owner-box">
         {loading ? (
-          <p className="item-detail-owner-loading">Loading…</p>
+          <p className="thing-detail-owner-loading">Loading…</p>
         ) : (
           <>
             <p className="owner-row">

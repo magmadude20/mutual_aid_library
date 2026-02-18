@@ -1,0 +1,266 @@
+import { useState } from 'react';
+import { supabase } from '../lib/supabaseClient';
+import Map from './Map';
+import LocationPicker from './LocationPicker';
+import Owner from './Owner';
+import './ThingDetailPage.css';
+
+const DEFAULT_LAT = 36.16473;
+const DEFAULT_LNG = -86.774204;
+
+function ThingDetailPage({ thing, user, onBack, onThingUpdated, onThingDeleted }) {
+  const [editingThing, setEditingThing] = useState(false);
+  const [editName, setEditName] = useState('');
+  const [editDescription, setEditDescription] = useState('');
+  const [editLatitude, setEditLatitude] = useState(DEFAULT_LAT);
+  const [editLongitude, setEditLongitude] = useState(DEFAULT_LNG);
+  const [editError, setEditError] = useState(null);
+  const [editSubmitting, setEditSubmitting] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [deleteSubmitting, setDeleteSubmitting] = useState(false);
+  const [deleteError, setDeleteError] = useState(null);
+
+  function startEditing() {
+    setEditName(thing.name ?? '');
+    setEditDescription(thing.description ?? '');
+    setEditLatitude(
+      thing.latitude != null && Number.isFinite(thing.latitude)
+        ? thing.latitude
+        : DEFAULT_LAT
+    );
+    setEditLongitude(
+      thing.longitude != null && Number.isFinite(thing.longitude)
+        ? thing.longitude
+        : DEFAULT_LNG
+    );
+    setEditError(null);
+    setEditingThing(true);
+  }
+
+  function cancelEditing() {
+    setEditingThing(false);
+    setEditError(null);
+  }
+
+  async function handleEditSave(e) {
+    e.preventDefault();
+    const trimmedName = editName.trim();
+    if (!trimmedName) {
+      setEditError('Name is required.');
+      return;
+    }
+    setEditError(null);
+    setEditSubmitting(true);
+    try {
+      const { data, error: updateError } = await supabase
+        .from('items')
+        .update({
+          name: trimmedName,
+          description: editDescription.trim() || null,
+          latitude: editLatitude,
+          longitude: editLongitude,
+        })
+        .eq('id', thing.id)
+        .select('id, name, description, latitude, longitude, user_id')
+        .single();
+
+      if (updateError) throw updateError;
+      setEditingThing(false);
+      onThingUpdated(data);
+    } catch (err) {
+      setEditError(err.message || 'Failed to update thing.');
+    } finally {
+      setEditSubmitting(false);
+    }
+  }
+
+  async function handleDeleteConfirm() {
+    setDeleteError(null);
+    setDeleteSubmitting(true);
+    try {
+      const { error: err } = await supabase
+        .from('items')
+        .delete()
+        .eq('id', thing.id);
+
+      if (err) throw err;
+      setDeleteConfirmOpen(false);
+      onThingDeleted();
+    } catch (err) {
+      setDeleteError(err.message || 'Failed to delete thing.');
+    } finally {
+      setDeleteSubmitting(false);
+    }
+  }
+
+  return (
+    <div className="thing-detail-page">
+      <div className="thing-detail-actions">
+        <button
+          type="button"
+          className="back-link"
+          onClick={() => {
+            setEditingThing(false);
+            setDeleteConfirmOpen(false);
+            setDeleteError(null);
+            onBack();
+          }}
+        >
+          ← Back
+        </button>
+        {thing.user_id === user?.id && !editingThing && (
+          <div className="thing-detail-buttons">
+            <button
+              type="button"
+              className="header-button"
+              onClick={startEditing}
+            >
+              Edit
+            </button>
+            <button
+              type="button"
+              className="header-button delete-button"
+              onClick={() => setDeleteConfirmOpen(true)}
+            >
+              Delete
+            </button>
+          </div>
+        )}
+      </div>
+      <h3 className="map-section-title">Thing</h3>
+      <article className="thing-detail" aria-label={`Thing: ${thing.name}`}>
+        {editingThing ? (
+          <form onSubmit={handleEditSave} className="thing-detail-edit-form">
+            {editError && (
+              <p className="form-error" role="alert">
+                {editError}
+              </p>
+            )}
+            <label className="form-label" htmlFor="edit-thing-name">
+              Name
+            </label>
+            <input
+              id="edit-thing-name"
+              type="text"
+              className="form-input"
+              value={editName}
+              onChange={(e) => setEditName(e.target.value)}
+              placeholder="Thing name"
+              required
+              disabled={editSubmitting}
+              autoComplete="off"
+            />
+            <label className="form-label" htmlFor="edit-thing-description">
+              Description (optional)
+            </label>
+            <textarea
+              id="edit-thing-description"
+              className="form-input form-textarea"
+              value={editDescription}
+              onChange={(e) => setEditDescription(e.target.value)}
+              placeholder="Description"
+              rows={3}
+              disabled={editSubmitting}
+            />
+            <div className="form-map-section">
+              <label className="form-label">Location (click map to set)</label>
+              <div className="location-picker-wrapper">
+                <LocationPicker
+                  selectedPoint={{ lat: editLatitude, lng: editLongitude }}
+                  onSelect={(lat, lng) => {
+                    setEditLatitude(lat);
+                    setEditLongitude(lng);
+                  }}
+                />
+              </div>
+            </div>
+            <div className="thing-detail-edit-buttons">
+              <button
+                type="submit"
+                className="submit-button"
+                disabled={editSubmitting}
+              >
+                {editSubmitting ? 'Saving…' : 'Save'}
+              </button>
+              <button
+                type="button"
+                className="header-button"
+                onClick={cancelEditing}
+                disabled={editSubmitting}
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        ) : (
+          <>
+            <h2 className="thing-detail-name">{thing.name}</h2>
+            <div className="thing-detail-description-row">
+              <span className="thing-detail-prefix">Description</span>
+              <span className="thing-detail-description-value">
+                {thing.description || '—'}
+              </span>
+            </div>
+            {thing.latitude != null &&
+             thing.longitude != null &&
+             Number.isFinite(thing.latitude) &&
+             Number.isFinite(thing.longitude) && (
+              <section className="thing-detail-map-section" aria-label="Thing location">
+                <h3 className="map-section-title">Location</h3>
+                <div className="map-wrapper thing-detail-map">
+                  <Map things={[thing]} />
+                </div>
+              </section>
+            )}
+          </>
+        )}
+      </article>
+      <Owner userId={thing.user_id} />
+      {deleteConfirmOpen && (
+        <div
+          className="modal-overlay"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="delete-modal-title"
+        >
+          <div className="modal-card">
+            <h3 id="delete-modal-title" className="modal-title">
+              Delete this thing?
+            </h3>
+            <p className="modal-text">
+              This cannot be undone.
+            </p>
+            {deleteError && (
+              <p className="form-error modal-error" role="alert">
+                {deleteError}
+              </p>
+            )}
+            <div className="modal-actions">
+              <button
+                type="button"
+                className="header-button"
+                onClick={() => {
+                  setDeleteConfirmOpen(false);
+                  setDeleteError(null);
+                }}
+                disabled={deleteSubmitting}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="modal-delete-button"
+                onClick={handleDeleteConfirm}
+                disabled={deleteSubmitting}
+              >
+                {deleteSubmitting ? 'Deleting…' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default ThingDetailPage;

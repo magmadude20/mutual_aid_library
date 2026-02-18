@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
+import './Profile.css';
 
 function Profile({ user }) {
   const [fullName, setFullName] = useState('');
@@ -101,7 +102,7 @@ function Profile({ user }) {
               rows={3}
               disabled={saving}
             />
-            <button type="submit" className="form-submit" disabled={saving}>
+            <button type="submit" className="submit-button" disabled={saving}>
               {saving ? 'Saving…' : 'Save'}
             </button>
           </form>

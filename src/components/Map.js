@@ -2,6 +2,7 @@ import { useEffect, useMemo } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import './Map.css';
 
 // Fix default marker icon in Create React App (webpack)
 import iconUrl from 'leaflet/dist/images/marker-icon.png';
@@ -14,20 +15,20 @@ L.Icon.Default.mergeOptions({ iconUrl, iconRetinaUrl, shadowUrl });
 const DEFAULT_CENTER = [40.7, -74.0];
 const DEFAULT_ZOOM = 10;
 
-function FitBounds({ itemsWithCoords }) {
+function FitBounds({ thingsWithCoords }) {
   const map = useMap();
-  const coordsKey = itemsWithCoords
-    .map((i) => `${i.latitude},${i.longitude}`)
+  const coordsKey = thingsWithCoords
+    .map((t) => `${t.latitude},${t.longitude}`)
     .join('|');
 
   useEffect(() => {
-    if (itemsWithCoords.length === 0) return;
-    if (itemsWithCoords.length === 1) {
-      map.setView([itemsWithCoords[0].latitude, itemsWithCoords[0].longitude], 14);
+    if (thingsWithCoords.length === 0) return;
+    if (thingsWithCoords.length === 1) {
+      map.setView([thingsWithCoords[0].latitude, thingsWithCoords[0].longitude], 14);
       return;
     }
     const bounds = L.latLngBounds(
-      itemsWithCoords.map((item) => [item.latitude, item.longitude])
+      thingsWithCoords.map((thing) => [thing.latitude, thing.longitude])
     );
     map.fitBounds(bounds, { padding: [40, 40], maxZoom: 14 });
   }, [map, coordsKey]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -35,17 +36,17 @@ function FitBounds({ itemsWithCoords }) {
   return null;
 }
 
-function Map({ items = [] }) {
-  const itemsWithCoords = useMemo(
+function Map({ things = [] }) {
+  const thingsWithCoords = useMemo(
     () =>
-      items.filter(
-        (item) =>
-          item.latitude != null &&
-          item.longitude != null &&
-          Number.isFinite(item.latitude) &&
-          Number.isFinite(item.longitude)
+      things.filter(
+        (thing) =>
+          thing.latitude != null &&
+          thing.longitude != null &&
+          Number.isFinite(thing.latitude) &&
+          Number.isFinite(thing.longitude)
       ),
-    [items]
+    [things]
   );
 
   return (
@@ -60,15 +61,15 @@ function Map({ items = [] }) {
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
-      <FitBounds itemsWithCoords={itemsWithCoords} />
-      {itemsWithCoords.map((item) => (
-        <Marker key={item.id} position={[item.latitude, item.longitude]}>
+      <FitBounds thingsWithCoords={thingsWithCoords} />
+      {thingsWithCoords.map((thing) => (
+        <Marker key={thing.id} position={[thing.latitude, thing.longitude]}>
           <Popup>
-            <strong>{item.name}</strong>
-            {item.description && (
+            <strong>{thing.name}</strong>
+            {thing.description && (
               <>
                 <br />
-                <span className="map-popup-description">{item.description}</span>
+                <span className="map-popup-description">{thing.description}</span>
               </>
             )}
           </Popup>

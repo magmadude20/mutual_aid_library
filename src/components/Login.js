@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
+import './Login.css';
 
 function Login() {
   const [mode, setMode] = useState('login'); // 'login' | 'signup'
@@ -92,7 +93,7 @@ function Login() {
             disabled={loading}
             autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
           />
-          <button type="submit" className="form-submit auth-submit" disabled={loading}>
+          <button type="submit" className="submit-button auth-submit" disabled={loading}>
             {loading ? (mode === 'login' ? 'Logging in…' : 'Signing up…') : mode === 'login' ? 'Log in' : 'Sign up'}
           </button>
         </form>

@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import './LocationPicker.css';
 
 // Fix default marker icon in Create React App (webpack)
 import iconUrl from 'leaflet/dist/images/marker-icon.png';

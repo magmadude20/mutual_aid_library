@@ -30,13 +30,6 @@
   color: #9ca3af;
 }
 
-.App-header-email {
-  max-width: 200px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 .header-button,
 .logout-button {
   padding: 0.35rem 0.75rem;

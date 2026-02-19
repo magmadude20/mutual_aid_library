@@ -13,10 +13,16 @@
 }
 
 .group-detail-description {
-  margin: 0 0 1rem;
+  margin: 0 0 0.5rem;
   font-size: 0.95rem;
   color: #b0b4bb;
   line-height: 1.5;
+}
+
+.group-detail-summary {
+  margin: 0 0 1rem;
+  font-size: 0.9rem;
+  color: #9ca3af;
 }
 
 .group-detail-invite {

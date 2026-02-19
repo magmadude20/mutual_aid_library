@@ -270,6 +270,9 @@ function GroupDetailPage({ user }) {
           <>
             <h2 className="group-detail-name">{group.name}</h2>
             {group.description && <p className="group-detail-description">{group.description}</p>}
+            <p className="group-detail-summary">
+              {membersLoading ? '…' : members.length} users sharing {sharedThingsLoading ? '…' : sharedThingIds.length} things
+            </p>
             {isAdmin && (
               <div className="group-detail-admin-buttons">
                 <button type="button" className="header-button" onClick={startEditing}>
@@ -287,7 +290,7 @@ function GroupDetailPage({ user }) {
 
       <section className="group-detail-invite" aria-label="Invite link">
         <h3 className="map-section-title">Invite link</h3>
-        <p className="group-invite-hint">Anyone with this link can join. Any member can copy it.</p>
+        <p className="group-invite-hint">Anyone with this link can join.</p>
         <button type="button" className="header-button" onClick={copyInviteLink}>
           Copy invite link
         </button>

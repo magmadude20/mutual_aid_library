@@ -1,14 +1,20 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
 import { useMyGroups } from '../hooks/useMyGroups';
 import { usePublicGroups } from '../hooks/usePublicGroups';
+import { useGroupCounts } from '../hooks/useGroupCounts';
 import './GroupsListPage.css';
 
 function GroupsListPage({ user }) {
   const navigate = useNavigate();
   const { groups, loading, error } = useMyGroups(user?.id);
   const { publicGroups, loading: publicLoading, error: publicError } = usePublicGroups(user?.id);
+  const allGroupIds = useMemo(
+    () => [...groups.map((g) => g.id), ...publicGroups.map((g) => g.id)],
+    [groups, publicGroups]
+  );
+  const { memberCountByGroupId, thingCountByGroupId } = useGroupCounts(allGroupIds);
   const [joiningId, setJoiningId] = useState(null);
   const [joinError, setJoinError] = useState(null);
 
@@ -54,6 +60,9 @@ function GroupsListPage({ user }) {
               <Link to={`/groups/${g.id}`} className="group-card group-card-link">
                 <span className="group-name">{g.name}</span>
                 {g.description && <span className="group-description">{g.description}</span>}
+                <span className="group-card-summary">
+                  {memberCountByGroupId[g.id] ?? 0} users sharing {thingCountByGroupId[g.id] ?? 0} things
+                </span>
               </Link>
               <button
                 type="button"
@@ -83,6 +92,9 @@ function GroupsListPage({ user }) {
                 <div className="group-card">
                   <span className="group-name">{g.name}</span>
                   {g.description && <span className="group-description">{g.description}</span>}
+                  <span className="group-card-summary">
+                    {memberCountByGroupId[g.id] ?? 0} users sharing {thingCountByGroupId[g.id] ?? 0} things
+                  </span>
                 </div>
                 <button
                   type="button"

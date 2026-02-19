@@ -11,7 +11,6 @@ function Layout({ user, logout }) {
         <div className="App-header-top">
           <h1>Mutual Aid Library of Things</h1>
           <div className="App-header-user">
-            <span className="App-header-email">{user?.email}</span>
             <NavLink
               to="/settings"
               className={({ isActive }) =>

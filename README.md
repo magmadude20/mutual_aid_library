@@ -1,6 +1,35 @@
-# Mutual Aid Library – Inventory Management
+# Disclaimer
 
-React app connected to Supabase for inventory management. The app lists all items from the database.
+This project is 99% done by AI.
+
+I've been a software engineer for a decade, but it was at a megacorp with its own infrastructure and I don't know how to operate in the real world.\
+Futhermore, I exclusively worked on backends.
+
+I don't know react. I don't know javascript. I don't know css. I don't know supabase.
+
+[I do not know best practices for any of this](https://media1.tenor.com/m/cq_SQD8rA9sAAAAd/itysl-i-think-you-should-leave.gif), and the code shouldn't be used as an example for ANYTHING.
+
+Hopefully, the app itself is useful.
+
+# Mutual Aid Library of Things
+
+General idea is to make a decentralized library of things.
+
+If you need a thing, you can get it from the library.
+
+If you have things that you're not using, you can let others borrow them.
+
+React app connected to Supabase for storage.
+
+## Possible future work
+
+* Support for groups, e.g. so you can share with just your immediate neighbors
+* Just generally better UI
+* Integrate sending requests instead of users providing contact info
+* Searching or filtering thing list based on distance
+* Support adding pictures of things
+
+Below is some AI stuff that's hopefully useful.
 
 ## Supabase setup
 
@@ -12,7 +41,7 @@ React app connected to Supabase for inventory management. The app lists all item
    REACT_APP_SUPABASE_ANON_KEY=your-anon-key
    ```
 
-3. **Create the `items` table** in the Supabase SQL Editor (if needed):
+3. TODO: there are more tables/columns now **Create the `items` table** in the Supabase SQL Editor (if needed):
    ```sql
    create table items (
      id uuid primary key default gen_random_uuid(),

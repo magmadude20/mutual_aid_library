@@ -1,8 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import Map from './Map';
 import LocationPicker from './LocationPicker';
 import Owner from './Owner';
+import { useOwnerGroups } from '../hooks/useOwnerGroups';
+import { useThingGroups } from '../hooks/useThingGroups';
 import './ThingDetailPage.css';
 
 const DEFAULT_LAT = 36.16473;
@@ -19,6 +21,97 @@ function ThingDetailPage({ thing, user, onBack, onThingUpdated, onThingDeleted }
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [deleteSubmitting, setDeleteSubmitting] = useState(false);
   const [deleteError, setDeleteError] = useState(null);
+
+  const isOwner = thing.user_id === user?.id;
+  const { groups: ownerGroups, loading: ownerGroupsLoading } = useOwnerGroups(isOwner ? thing.user_id : null);
+  const { groupIds: sharedGroupIds, refetch: refetchThingGroups } = useThingGroups(thing.id);
+  const [sharingPublic, setSharingPublic] = useState(thing.is_public !== false);
+  const [sharingGroupIds, setSharingGroupIds] = useState([]);
+  const [sharingSaving, setSharingSaving] = useState(false);
+  const [sharingError, setSharingError] = useState(null);
+
+  useEffect(() => {
+    setSharingPublic(thing.is_public !== false);
+  }, [thing.is_public]);
+
+  useEffect(() => {
+    setSharingGroupIds(sharedGroupIds);
+  }, [sharedGroupIds]);
+
+  async function handlePublicChange(checked) {
+    setSharingError(null);
+    setSharingPublic(checked);
+    setSharingSaving(true);
+    try {
+      const { data, error: updateError } = await supabase
+        .from('items')
+        .update({ is_public: checked })
+        .eq('id', thing.id)
+        .select('id, name, description, latitude, longitude, user_id, is_public')
+        .single();
+      if (updateError) throw updateError;
+      onThingUpdated(data);
+    } catch (err) {
+      setSharingPublic(thing.is_public !== false);
+      setSharingError(err.message || 'Failed to save.');
+    } finally {
+      setSharingSaving(false);
+    }
+  }
+
+  async function handleGroupToggle(groupId) {
+    const currentlyShared = sharingGroupIds.includes(groupId);
+    const previousIds = sharingGroupIds;
+    const nextIds = currentlyShared
+      ? previousIds.filter((id) => id !== groupId)
+      : [...previousIds, groupId];
+    setSharingError(null);
+    setSharingGroupIds(nextIds);
+    setSharingSaving(true);
+    try {
+      if (currentlyShared) {
+        const { error } = await supabase
+          .from('things_to_groups')
+          .delete()
+          .eq('thing_id', thing.id)
+          .eq('group_id', groupId);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from('things_to_groups')
+          .insert({ thing_id: thing.id, group_id: groupId });
+        if (error) throw error;
+      }
+      refetchThingGroups(true);
+    } catch (err) {
+      setSharingGroupIds(previousIds);
+      setSharingError(err.message || 'Failed to save.');
+    } finally {
+      setSharingSaving(false);
+    }
+  }
+
+  async function handleShareWithAllGroups() {
+    if (!ownerGroups?.length) return;
+    const toAdd = ownerGroups.filter((g) => !sharingGroupIds.includes(g.id));
+    if (toAdd.length === 0) return;
+    const previousIds = sharingGroupIds;
+    setSharingError(null);
+    setSharingGroupIds((prev) => [...prev, ...toAdd.map((g) => g.id)]);
+    setSharingSaving(true);
+    try {
+      const { error } = await supabase.from('things_to_groups').insert(
+        toAdd.map((g) => ({ thing_id: thing.id, group_id: g.id }))
+      );
+      if (error) throw error;
+      refetchThingGroups(true);
+    } catch (err) {
+      setSharingGroupIds(previousIds);
+      setSharingError(err.message || 'Failed to share with all groups.');
+    } finally {
+      setSharingSaving(false);
+    }
+  }
 
   function startEditing() {
     setEditName(thing.name ?? '');
@@ -61,7 +154,7 @@ function ThingDetailPage({ thing, user, onBack, onThingUpdated, onThingDeleted }
           longitude: editLongitude,
         })
         .eq('id', thing.id)
-        .select('id, name, description, latitude, longitude, user_id')
+        .select('id, name, description, latitude, longitude, user_id, is_public')
         .single();
 
       if (updateError) throw updateError;
@@ -215,6 +308,54 @@ function ThingDetailPage({ thing, user, onBack, onThingUpdated, onThingDeleted }
           </>
         )}
       </article>
+      {isOwner && !editingThing && (
+        <section className="thing-detail-sharing" aria-label="Sharing">
+          <h3 className="map-section-title">Sharing</h3>
+          <div className="thing-sharing-form">
+            {sharingError && <p className="form-error" role="alert">{sharingError}</p>}
+            <div className="thing-sharing-checkbox-row">
+              <input
+                id="share-public"
+                type="checkbox"
+                checked={sharingPublic}
+                onChange={(e) => handlePublicChange(e.target.checked)}
+                disabled={sharingSaving}
+              />
+              <label className="form-label" htmlFor="share-public">Public (visible to everyone)</label>
+            </div>
+            {!ownerGroupsLoading && ownerGroups.length > 0 && (
+              <>
+                <div className="thing-sharing-groups-header">
+                  <p className="thing-sharing-groups-label">Shared with groups:</p>
+                  <button
+                    type="button"
+                    className="header-button thing-share-all-groups-btn"
+                    onClick={handleShareWithAllGroups}
+                    disabled={
+                      sharingSaving ||
+                      ownerGroups.every((g) => sharingGroupIds.includes(g.id))
+                    }
+                  >
+                    Share with all groups
+                  </button>
+                </div>
+                {ownerGroups.map((g) => (
+                  <div key={g.id} className="thing-sharing-checkbox-row">
+                    <input
+                      id={`share-group-${g.id}`}
+                      type="checkbox"
+                      checked={sharingGroupIds.includes(g.id)}
+                      onChange={() => handleGroupToggle(g.id)}
+                      disabled={sharingSaving}
+                    />
+                    <label className="form-label" htmlFor={`share-group-${g.id}`}>{g.name}</label>
+                  </div>
+                ))}
+              </>
+            )}
+          </div>
+        </section>
+      )}
       <Owner userId={thing.user_id} />
       {deleteConfirmOpen && (
         <div

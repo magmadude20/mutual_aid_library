@@ -23,7 +23,7 @@ React app connected to Supabase for storage.
 
 ## Possible future work
 
-* Support for groups, e.g. so you can share with just your immediate neighbors
+* ~~Support for groups, e.g. so you can share with just your immediate neighbors~~ (done: create groups, invite link, share things with groups, browse public groups)
 * Just generally better UI
 * Integrate sending requests instead of users providing contact info
 * Searching or filtering thing list based on distance
@@ -53,7 +53,9 @@ Below is some AI stuff that's hopefully useful.
    create policy "Allow public read" on items for select using (true);
    ```
 
-4. Restart the dev server after changing env vars (`npm start`).
+4. **Groups and sharing:** Run the migration in `supabase/migrations/001_groups_and_sharing.sql` in the Supabase SQL Editor. This creates `groups`, `group_members`, `things_to_groups`, adds `is_public` to `items`, sets up RLS, and adds the `join_group_by_token` and `get_group_by_invite_token` RPCs. Your `items` table must have `user_id` (uuid references auth.users) for RLS to work.
+
+5. Restart the dev server after changing env vars (`npm start`).
 
 ## Available Scripts
 

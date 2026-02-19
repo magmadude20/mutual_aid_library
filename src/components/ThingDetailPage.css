@@ -196,3 +196,51 @@
 .thing-detail-map {
   height: 300px;
 }
+
+.thing-detail-sharing {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #3a3f47;
+}
+
+.thing-sharing-form {
+  margin-top: 0.5rem;
+}
+
+.thing-sharing-checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.thing-sharing-checkbox-row input[type="checkbox"] {
+  width: auto;
+}
+
+.thing-sharing-checkbox-row .form-label {
+  margin: 0;
+}
+
+.thing-sharing-groups-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0.75rem 0 0.35rem;
+}
+
+.thing-sharing-groups-label {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #b0b4bb;
+}
+
+.thing-share-all-groups-btn {
+  flex-shrink: 0;
+}
+
+.thing-sharing-form .submit-button {
+  margin-top: 1rem;
+}

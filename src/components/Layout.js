@@ -3,7 +3,7 @@ import { Outlet, useLocation, NavLink } from 'react-router-dom';
 function Layout({ user, logout }) {
   const location = useLocation();
   const pathname = location.pathname;
-  const hideTabs = pathname === '/settings' || pathname.startsWith('/thing/');
+  const hideTabs = pathname === '/settings' || pathname.startsWith('/thing/') || pathname.startsWith('/join/') || pathname.startsWith('/groups/');
 
   return (
     <div className="App">
@@ -45,6 +45,16 @@ function Layout({ user, logout }) {
               className={({ isActive }) => `tab ${isActive ? 'tab-active' : ''}`}
             >
               My things
+            </NavLink>
+            <NavLink
+              to="/groups"
+              end
+              role="tab"
+              aria-controls="groups-panel"
+              id="groups-tab"
+              className={({ isActive }) => `tab ${isActive ? 'tab-active' : ''}`}
+            >
+              My groups
             </NavLink>
           </nav>
         )}

@@ -1,0 +1,27 @@
+.join-group-page {
+  padding-top: 0.25rem;
+}
+
+.join-group-title {
+  margin: 0 0 0.5rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.join-group-name {
+  margin: 0 0 1rem;
+  font-size: 1.1rem;
+  color: #b0b4bb;
+}
+
+.join-group-hint {
+  margin: 0 0 1rem;
+  font-size: 0.95rem;
+  color: #9ca3af;
+}
+
+.join-group-page .submit-button,
+.join-group-page .header-button {
+  margin-right: 0.5rem;
+  margin-bottom: 0.5rem;
+}

@@ -18,10 +18,67 @@
   margin-top: 1rem;
 }
 
+.add-thing-form-sharing {
+  margin-top: 1.25rem;
+}
+
+.add-thing-form-sharing-title {
+  margin: 0 0 0.5rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #b0b4bb;
+}
+
+.add-thing-form-sharing .form-checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.35rem;
+}
+
+.add-thing-form-sharing .form-checkbox-row input[type="checkbox"] {
+  width: auto;
+}
+
+.add-thing-form-sharing .form-label {
+  margin: 0;
+}
+
+.add-thing-form-groups-label {
+  margin: 0.75rem 0 0.35rem;
+  font-size: 0.9rem;
+  color: #9ca3af;
+}
+
 .add-thing-form-actions {
   display: flex;
   gap: 0.75rem;
   margin-top: 1rem;
+}
+
+.things-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.things-list li {
+  min-width: 0;
+}
+
+.my-things-list-actions {
+  margin-bottom: 0.5rem;
+}
+
+.thing-list-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
 }
 
 .add-thing-form {
@@ -30,4 +87,169 @@
   border-radius: 8px;
   padding: 1.25rem 1.5rem;
   margin-bottom: 1.5rem;
+}
+
+.my-things-bulk-toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  padding: 0.5rem 0;
+}
+
+.bulk-toolbar-label {
+  font-size: 0.95rem;
+  color: #9ca3af;
+}
+
+.bulk-action-select {
+  padding: 0.35rem 0.75rem;
+  font-size: 0.85rem;
+  color: #e4e6eb;
+  background: #1a1d23;
+  border: 1px solid #4b5563;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.things-list .thing-card {
+  background: #25282e;
+  border: 1px solid #3a3f47;
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+  text-align: left;
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+.thing-card-clickable {
+  flex: 1;
+  min-width: 0;
+  box-sizing: border-box;
+  display: block;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  border: 1px solid #3a3f47;
+  text-align: left;
+  transition: border-color 0.15s, background-color 0.15s;
+}
+
+.thing-card-clickable:hover {
+  border-color: #4b5563;
+  background: #2d3139;
+}
+
+.thing-select-checkbox {
+  flex-shrink: 0;
+  width: 1.35rem;
+  height: 1.35rem;
+  cursor: pointer;
+}
+
+.thing-card-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.things-list .thing-name {
+  font-weight: 600;
+  font-size: 1.05rem;
+  margin-bottom: 0.25rem;
+}
+
+.things-list .thing-description {
+  font-size: 0.875rem;
+  color: #b0b4bb;
+  line-height: 1.4;
+}
+
+.things-list .thing-sharing-summary {
+  font-size: 0.8rem;
+  color: #9ca3af;
+  margin-top: 0.35rem;
+}
+
+.my-things-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  z-index: 2000;
+}
+
+.my-things-modal-card {
+  background: #25282e;
+  border: 1px solid #3a3f47;
+  border-radius: 8px;
+  padding: 1.25rem 1.5rem;
+  max-width: 420px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.my-things-modal-card h3 {
+  margin: 0 0 0.5rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.my-things-modal-card .modal-text {
+  margin: 0 0 1rem;
+  font-size: 0.9rem;
+  color: #9ca3af;
+}
+
+.form-checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.form-checkbox-row input[type="checkbox"] {
+  width: auto;
+}
+
+.form-checkbox-row .form-label {
+  margin: 0;
+}
+
+.bulk-sharing-groups-label {
+  margin: 0.75rem 0 0.35rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #b0b4bb;
+}
+
+.my-things-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 1.25rem;
+}
+
+.my-things-modal-card .modal-delete-button {
+  padding: 0.35rem 0.75rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #fff;
+  background: #dc2626;
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.my-things-modal-card .modal-delete-button:hover:not(:disabled) {
+  background: #b91c1c;
+}
+
+.my-things-modal-card .modal-delete-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }

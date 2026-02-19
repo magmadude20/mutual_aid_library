@@ -4,12 +4,17 @@ import { supabase } from './lib/supabaseClient';
 import { useAuth } from './hooks/useAuth';
 import { useThings } from './hooks/useThings';
 import { useMyThings } from './hooks/useMyThings';
+import { useOwnerGroups } from './hooks/useOwnerGroups';
 import Login from './components/Login';
 import Layout from './components/Layout';
 import SettingsPage from './components/SettingsPage';
 import ThingDetailRoute from './components/ThingDetailRoute';
 import ThingsPanel from './components/ThingsPanel';
 import MyThingsPanel from './components/MyThingsPanel';
+import JoinGroupPage from './components/JoinGroupPage';
+import GroupsListPage from './components/GroupsListPage';
+import CreateGroupPage from './components/CreateGroupPage';
+import GroupDetailPage from './components/GroupDetailPage';
 import './App.css';
 
 const DEFAULT_LAT = 36.16473;
@@ -27,8 +32,11 @@ function App() {
   const [description, setDescription] = useState('');
   const [latitude, setLatitude] = useState(DEFAULT_LAT);
   const [longitude, setLongitude] = useState(DEFAULT_LNG);
+  const [addFormIsPublic, setAddFormIsPublic] = useState(true);
+  const [addFormSharingGroupIds, setAddFormSharingGroupIds] = useState([]);
   const [formError, setFormError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  const { groups: ownerGroups } = useOwnerGroups(user?.id);
 
   useEffect(() => {
     if (!user?.id || location.pathname === '/settings') return;
@@ -66,21 +74,32 @@ function App() {
       const { data, error: insertError } = await supabase
         .from('items')
         .insert({
+          // user_id: user.id,
+          // user_id: auth.uid(),
           name: trimmedName,
           description: description.trim() || null,
           latitude,
           longitude,
+          is_public: addFormIsPublic,
         })
-        .select('id, name, description, latitude, longitude, user_id')
+        .select('id, name, description, latitude, longitude, user_id, is_public')
         .single();
 
       if (insertError) throw insertError;
+      if (addFormSharingGroupIds.length > 0) {
+        const { error: shareError } = await supabase.from('things_to_groups').insert(
+          addFormSharingGroupIds.map((group_id) => ({ thing_id: data.id, group_id }))
+        );
+        if (shareError) throw shareError;
+      }
       setThings((prev) => [data, ...prev]);
       setMyThings((prev) => [data, ...prev]);
       setName('');
       setDescription('');
       setLatitude(DEFAULT_LAT);
       setLongitude(DEFAULT_LNG);
+      setAddFormIsPublic(true);
+      setAddFormSharingGroupIds([]);
       setShowAddForm(false);
     } catch (err) {
       setFormError(err.message || 'Failed to add thing.');
@@ -129,11 +148,16 @@ function App() {
           path="my-things"
           element={
             <MyThingsPanel
+              user={user}
               myThings={myThings}
+              setMyThings={setMyThings}
               myThingsLoading={myThingsLoading}
               myThingsError={myThingsError}
               showAddForm={showAddForm}
-              onShowAddForm={setShowAddForm}
+              onShowAddForm={(show) => {
+                if (show) setAddFormSharingGroupIds(ownerGroups?.map((g) => g.id) ?? []);
+                setShowAddForm(show);
+              }}
               addForm={{
                 name,
                 description,
@@ -141,13 +165,24 @@ function App() {
                 longitude,
                 formError,
                 submitting,
+                isPublic: addFormIsPublic,
+                sharingGroupIds: addFormSharingGroupIds,
                 onNameChange: setName,
                 onDescriptionChange: setDescription,
                 onLocationSelect: (lat, lng) => {
                   setLatitude(lat);
                   setLongitude(lng);
                 },
-                onCancelAdd: () => setShowAddForm(false),
+                onIsPublicChange: setAddFormIsPublic,
+                onToggleSharingGroup: (groupId) =>
+                  setAddFormSharingGroupIds((prev) =>
+                    prev.includes(groupId) ? prev.filter((id) => id !== groupId) : [...prev, groupId]
+                  ),
+                onCancelAdd: () => {
+                  setAddFormIsPublic(true);
+                  setAddFormSharingGroupIds([]);
+                  setShowAddForm(false);
+                },
               }}
               onAddSubmit={handleAddSubmit}
               onSelectThing={selectThing}
@@ -173,6 +208,10 @@ function App() {
             />
           }
         />
+        <Route path="join/:inviteToken" element={<JoinGroupPage user={user} />} />
+        <Route path="groups" element={<GroupsListPage user={user} />} />
+        <Route path="groups/new" element={<CreateGroupPage user={user} />} />
+        <Route path="groups/:groupId" element={<GroupDetailPage user={user} />} />
       </Route>
     </Routes>
   );

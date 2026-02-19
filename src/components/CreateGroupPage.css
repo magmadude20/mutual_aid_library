@@ -1,0 +1,33 @@
+.create-group-page {
+  padding-top: 0.25rem;
+}
+
+.create-group-page .back-link {
+  margin-bottom: 1rem;
+}
+
+.create-group-form {
+  max-width: 480px;
+  margin-top: 1rem;
+}
+
+.form-checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.form-checkbox-row input[type="checkbox"] {
+  width: auto;
+}
+
+.form-checkbox-row .form-label {
+  margin: 0;
+}
+
+.create-group-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}

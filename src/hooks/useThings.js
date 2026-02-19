@@ -15,7 +15,7 @@ export function useThings(session) {
         setError(null);
         const { data, error: fetchError } = await supabase
           .from('items')
-          .select('id, name, description, latitude, longitude, user_id');
+          .select('id, name, description, latitude, longitude, user_id, is_public');
 
         if (fetchError) throw fetchError;
         if (!isMounted) return;

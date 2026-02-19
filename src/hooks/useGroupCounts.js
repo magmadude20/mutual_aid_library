@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
 
 /** Member count and thing count per group id. */
@@ -7,9 +7,13 @@ export function useGroupCounts(groupIds) {
   const [thingCountByGroupId, setThingCountByGroupId] = useState({});
   const [loading, setLoading] = useState(false);
 
-  const ids = groupIds?.length > 0 ? [...new Set(groupIds)] : [];
+  const idsKey = useMemo(
+    () => (groupIds?.length > 0 ? [...new Set(groupIds)].sort().join(',') : ''),
+    [groupIds]
+  );
 
   useEffect(() => {
+    const ids = idsKey ? idsKey.split(',') : [];
     if (ids.length === 0) {
       setMemberCountByGroupId({});
       setThingCountByGroupId({});
@@ -45,7 +49,7 @@ export function useGroupCounts(groupIds) {
       }
     })();
     return () => { isMounted = false; };
-  }, [ids.join(',')]);
+  }, [idsKey]);
 
   return { memberCountByGroupId, thingCountByGroupId, loading };
 }

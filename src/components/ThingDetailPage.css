@@ -158,6 +158,21 @@
   margin-bottom: 0;
 }
 
+.owner-row-link {
+  margin-top: 0.75rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid #3a3f47;
+}
+
+.owner-view-profile-link {
+  font-size: 0.9rem;
+  color: #6366f1;
+}
+
+.owner-view-profile-link:hover {
+  text-decoration: underline;
+}
+
 .owner-prefix {
   display: block;
   font-size: 0.75rem;

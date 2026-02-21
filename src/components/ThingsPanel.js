@@ -1,7 +1,10 @@
 import Map from './Map';
+import { useUserLocationMarkers } from '../hooks/useUserLocationMarkers';
 import './ThingsPanel.css';
 
 function ThingsPanel({ things, loading, error, onSelectThing }) {
+  const { markers } = useUserLocationMarkers(things);
+
   return (
     <div
       id="things-panel"
@@ -42,8 +45,9 @@ function ThingsPanel({ things, loading, error, onSelectThing }) {
 
       <section className="map-section" aria-label="Map of things">
         <h2 className="map-section-title">Map</h2>
+        <p className="map-section-hint">People who share things appear at their profile location.</p>
         <div className="map-wrapper">
-          <Map things={things} />
+          <Map markers={markers} />
         </div>
       </section>
     </div>

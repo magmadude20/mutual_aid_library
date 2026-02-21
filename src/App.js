@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
+import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { supabase } from './lib/supabaseClient';
 import { useAuth } from './hooks/useAuth';
 import { useThings } from './hooks/useThings';
@@ -7,7 +7,6 @@ import { useMyThings } from './hooks/useMyThings';
 import { useOwnerGroups } from './hooks/useOwnerGroups';
 import Login from './components/Login';
 import Layout from './components/Layout';
-import SettingsPage from './components/SettingsPage';
 import ThingDetailRoute from './components/ThingDetailRoute';
 import ThingsPanel from './components/ThingsPanel';
 import MyThingsPanel from './components/MyThingsPanel';
@@ -15,10 +14,8 @@ import JoinGroupPage from './components/JoinGroupPage';
 import GroupsListPage from './components/GroupsListPage';
 import CreateGroupPage from './components/CreateGroupPage';
 import GroupDetailPage from './components/GroupDetailPage';
+import UserDetailPage from './components/UserDetailPage';
 import './App.css';
-
-const DEFAULT_LAT = 36.16473;
-const DEFAULT_LNG = -86.774204;
 
 function App() {
   const { session, user, loading: authLoading, logout } = useAuth();
@@ -30,8 +27,6 @@ function App() {
   const location = useLocation();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const [latitude, setLatitude] = useState(DEFAULT_LAT);
-  const [longitude, setLongitude] = useState(DEFAULT_LNG);
   const [addFormIsPublic, setAddFormIsPublic] = useState(true);
   const [addFormSharingGroupIds, setAddFormSharingGroupIds] = useState([]);
   const [formError, setFormError] = useState(null);
@@ -39,7 +34,7 @@ function App() {
   const { groups: ownerGroups } = useOwnerGroups(user?.id);
 
   useEffect(() => {
-    if (!user?.id || location.pathname === '/settings') return;
+    if (!user?.id || location.pathname === `/user/${user.id}`) return;
     let isMounted = true;
     (async () => {
       try {
@@ -52,7 +47,7 @@ function App() {
         const hasName = (data?.full_name ?? '').toString().trim() !== '';
         const hasContact = (data?.contact_info ?? '').toString().trim() !== '';
         if (!hasName || !hasContact) {
-          navigate('/settings', { replace: true });
+          navigate(`/user/${user.id}`, { replace: true });
         }
       } catch {
         // ignore; don't redirect on fetch error
@@ -74,15 +69,12 @@ function App() {
       const { data, error: insertError } = await supabase
         .from('items')
         .insert({
-          // user_id: user.id,
-          // user_id: auth.uid(),
+          user_id: user.id,
           name: trimmedName,
           description: description.trim() || null,
-          latitude,
-          longitude,
           is_public: addFormIsPublic,
         })
-        .select('id, name, description, latitude, longitude, user_id, is_public')
+        .select('id, name, description, user_id, is_public')
         .single();
 
       if (insertError) throw insertError;
@@ -96,8 +88,6 @@ function App() {
       setMyThings((prev) => [data, ...prev]);
       setName('');
       setDescription('');
-      setLatitude(DEFAULT_LAT);
-      setLongitude(DEFAULT_LNG);
       setAddFormIsPublic(true);
       setAddFormSharingGroupIds([]);
       setShowAddForm(false);
@@ -161,18 +151,12 @@ function App() {
               addForm={{
                 name,
                 description,
-                latitude,
-                longitude,
                 formError,
                 submitting,
                 isPublic: addFormIsPublic,
                 sharingGroupIds: addFormSharingGroupIds,
                 onNameChange: setName,
                 onDescriptionChange: setDescription,
-                onLocationSelect: (lat, lng) => {
-                  setLatitude(lat);
-                  setLongitude(lng);
-                },
                 onIsPublicChange: setAddFormIsPublic,
                 onToggleSharingGroup: (groupId) =>
                   setAddFormSharingGroupIds((prev) =>
@@ -201,17 +185,13 @@ function App() {
         />
         <Route
           path="settings"
-          element={
-            <SettingsPage
-              user={user}
-              onBack={() => navigate('/')}
-            />
-          }
+          element={<Navigate to={user?.id ? `/user/${user.id}` : '/'} replace />}
         />
         <Route path="join/:inviteToken" element={<JoinGroupPage user={user} />} />
         <Route path="groups" element={<GroupsListPage user={user} />} />
         <Route path="groups/new" element={<CreateGroupPage user={user} />} />
         <Route path="groups/:groupId" element={<GroupDetailPage user={user} />} />
+        <Route path="user/:userId" element={<UserDetailPage user={user} />} />
       </Route>
     </Routes>
   );

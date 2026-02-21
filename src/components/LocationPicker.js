@@ -24,9 +24,16 @@ function MapClickHandler({ onSelect }) {
 }
 
 function LocationPicker({ selectedPoint, onSelect }) {
+  const center =
+    selectedPoint != null &&
+    Number.isFinite(selectedPoint.lat) &&
+    Number.isFinite(selectedPoint.lng)
+      ? [selectedPoint.lat, selectedPoint.lng]
+      : DEFAULT_CENTER;
+
   return (
     <MapContainer
-      center={DEFAULT_CENTER}
+      center={center}
       zoom={DEFAULT_ZOOM}
       scrollWheelZoom={true}
       className="map-container location-picker-map"

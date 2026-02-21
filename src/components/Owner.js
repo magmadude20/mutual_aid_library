@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
 
 function Owner({ userId }) {
@@ -60,6 +61,13 @@ function Owner({ userId }) {
                 {contactInfo || '—'}
               </span>
             </p>
+            {userId && (
+              <p className="owner-row owner-row-link">
+                <Link to={`/user/${userId}`} className="owner-view-profile-link">
+                  View all things by this owner
+                </Link>
+              </p>
+            )}
           </>
         )}
       </div>

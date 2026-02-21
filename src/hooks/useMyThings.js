@@ -15,7 +15,7 @@ export function useMyThings(userId) {
         setError(null);
         const { data, error: fetchError } = await supabase
           .from('items')
-          .select('id, name, description, latitude, longitude, user_id, is_public')
+          .select('id, name, description, user_id, is_public')
           .eq('user_id', userId);
 
         if (fetchError) throw fetchError;

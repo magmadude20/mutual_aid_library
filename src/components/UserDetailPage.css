@@ -1,0 +1,108 @@
+.user-detail-page {
+  padding-top: 0.25rem;
+}
+
+.user-detail-page .back-link {
+  margin-bottom: 1rem;
+}
+
+.user-detail-header {
+  margin-bottom: 1.5rem;
+}
+
+.user-detail-name-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.user-detail-name {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 600;
+}
+
+.user-detail-badge {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #9ca3af;
+  background: #374151;
+  padding: 0.2rem 0.5rem;
+  border-radius: 999px;
+}
+
+.user-detail-contact {
+  margin: 0.5rem 0 0;
+  font-size: 0.95rem;
+  color: #b0b4bb;
+}
+
+.user-detail-contact-label {
+  color: #9ca3af;
+}
+
+.user-detail-location {
+  margin-top: 1.5rem;
+}
+
+.user-detail-map {
+  margin-top: 0.5rem;
+}
+
+.user-detail-things {
+  margin-top: 1.5rem;
+}
+
+.user-detail-things-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.user-detail-things-list .thing-card {
+  width: 100%;
+  text-align: left;
+}
+
+.user-detail-edit {
+  margin-top: 0.5rem;
+}
+
+.user-detail-edit-title {
+  margin: 0 0 1rem;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.user-detail-edit-form .form-label {
+  display: block;
+  margin-top: 0.75rem;
+  margin-bottom: 0.25rem;
+}
+
+.user-detail-edit-form .form-label:first-of-type {
+  margin-top: 0;
+}
+
+.user-detail-edit-form .form-hint {
+  margin: 0.25rem 0 0;
+  font-size: 0.85rem;
+  color: #9ca3af;
+}
+
+.user-detail-edit-message {
+  font-size: 0.9rem;
+  color: #9ca3af;
+  margin: 0 0 0.75rem;
+}
+
+.user-detail-edit-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+}

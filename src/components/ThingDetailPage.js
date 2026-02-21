@@ -1,21 +1,14 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabaseClient';
-import Map from './Map';
-import LocationPicker from './LocationPicker';
 import Owner from './Owner';
 import { useOwnerGroups } from '../hooks/useOwnerGroups';
 import { useThingGroups } from '../hooks/useThingGroups';
 import './ThingDetailPage.css';
 
-const DEFAULT_LAT = 36.16473;
-const DEFAULT_LNG = -86.774204;
-
 function ThingDetailPage({ thing, user, onBack, onThingUpdated, onThingDeleted }) {
   const [editingThing, setEditingThing] = useState(false);
   const [editName, setEditName] = useState('');
   const [editDescription, setEditDescription] = useState('');
-  const [editLatitude, setEditLatitude] = useState(DEFAULT_LAT);
-  const [editLongitude, setEditLongitude] = useState(DEFAULT_LNG);
   const [editError, setEditError] = useState(null);
   const [editSubmitting, setEditSubmitting] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
@@ -47,7 +40,7 @@ function ThingDetailPage({ thing, user, onBack, onThingUpdated, onThingDeleted }
         .from('items')
         .update({ is_public: checked })
         .eq('id', thing.id)
-        .select('id, name, description, latitude, longitude, user_id, is_public')
+        .select('id, name, description, user_id, is_public')
         .single();
       if (updateError) throw updateError;
       onThingUpdated(data);
@@ -116,16 +109,6 @@ function ThingDetailPage({ thing, user, onBack, onThingUpdated, onThingDeleted }
   function startEditing() {
     setEditName(thing.name ?? '');
     setEditDescription(thing.description ?? '');
-    setEditLatitude(
-      thing.latitude != null && Number.isFinite(thing.latitude)
-        ? thing.latitude
-        : DEFAULT_LAT
-    );
-    setEditLongitude(
-      thing.longitude != null && Number.isFinite(thing.longitude)
-        ? thing.longitude
-        : DEFAULT_LNG
-    );
     setEditError(null);
     setEditingThing(true);
   }
@@ -150,11 +133,9 @@ function ThingDetailPage({ thing, user, onBack, onThingUpdated, onThingDeleted }
         .update({
           name: trimmedName,
           description: editDescription.trim() || null,
-          latitude: editLatitude,
-          longitude: editLongitude,
         })
         .eq('id', thing.id)
-        .select('id, name, description, latitude, longitude, user_id, is_public')
+        .select('id, name, description, user_id, is_public')
         .single();
 
       if (updateError) throw updateError;
@@ -255,18 +236,6 @@ function ThingDetailPage({ thing, user, onBack, onThingUpdated, onThingDeleted }
               rows={3}
               disabled={editSubmitting}
             />
-            <div className="form-map-section">
-              <label className="form-label">Location (click map to set)</label>
-              <div className="location-picker-wrapper">
-                <LocationPicker
-                  selectedPoint={{ lat: editLatitude, lng: editLongitude }}
-                  onSelect={(lat, lng) => {
-                    setEditLatitude(lat);
-                    setEditLongitude(lng);
-                  }}
-                />
-              </div>
-            </div>
             <div className="thing-detail-edit-buttons">
               <button
                 type="submit"
@@ -294,17 +263,6 @@ function ThingDetailPage({ thing, user, onBack, onThingUpdated, onThingDeleted }
                 {thing.description || '—'}
               </span>
             </div>
-            {thing.latitude != null &&
-             thing.longitude != null &&
-             Number.isFinite(thing.latitude) &&
-             Number.isFinite(thing.longitude) && (
-              <section className="thing-detail-map-section" aria-label="Thing location">
-                <h3 className="map-section-title">Location</h3>
-                <div className="map-wrapper thing-detail-map">
-                  <Map things={[thing]} />
-                </div>
-              </section>
-            )}
           </>
         )}
       </article>

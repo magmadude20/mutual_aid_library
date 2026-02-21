@@ -1,4 +1,5 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -15,40 +16,25 @@ L.Icon.Default.mergeOptions({ iconUrl, iconRetinaUrl, shadowUrl });
 const DEFAULT_CENTER = [40.7, -74.0];
 const DEFAULT_ZOOM = 10;
 
-function FitBounds({ thingsWithCoords }) {
+function FitBounds({ markers }) {
   const map = useMap();
-  const coordsKey = thingsWithCoords
-    .map((t) => `${t.latitude},${t.longitude}`)
-    .join('|');
+  const coordsKey = markers.map((m) => `${m.latitude},${m.longitude}`).join('|');
 
   useEffect(() => {
-    if (thingsWithCoords.length === 0) return;
-    if (thingsWithCoords.length === 1) {
-      map.setView([thingsWithCoords[0].latitude, thingsWithCoords[0].longitude], 14);
+    if (markers.length === 0) return;
+    if (markers.length === 1) {
+      map.setView([markers[0].latitude, markers[0].longitude], 14);
       return;
     }
-    const bounds = L.latLngBounds(
-      thingsWithCoords.map((thing) => [thing.latitude, thing.longitude])
-    );
+    const bounds = L.latLngBounds(markers.map((m) => [m.latitude, m.longitude]));
     map.fitBounds(bounds, { padding: [40, 40], maxZoom: 14 });
   }, [map, coordsKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return null;
 }
 
-function Map({ things = [] }) {
-  const thingsWithCoords = useMemo(
-    () =>
-      things.filter(
-        (thing) =>
-          thing.latitude != null &&
-          thing.longitude != null &&
-          Number.isFinite(thing.latitude) &&
-          Number.isFinite(thing.longitude)
-      ),
-    [things]
-  );
-
+/** markers = [{ userId, latitude, longitude, fullName, things }] */
+function Map({ markers = [] }) {
   return (
     <MapContainer
       center={DEFAULT_CENTER}
@@ -61,17 +47,23 @@ function Map({ things = [] }) {
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
-      <FitBounds thingsWithCoords={thingsWithCoords} />
-      {thingsWithCoords.map((thing) => (
-        <Marker key={thing.id} position={[thing.latitude, thing.longitude]}>
+      <FitBounds markers={markers} />
+      {markers.map((marker) => (
+        <Marker key={marker.userId} position={[marker.latitude, marker.longitude]}>
           <Popup>
-            <strong>{thing.name}</strong>
-            {thing.description && (
+            {marker.fullName && <strong>{marker.fullName}</strong>}
+            {marker.things?.length > 0 && (
               <>
-                <br />
-                <span className="map-popup-description">{thing.description}</span>
+                {marker.fullName && <br />}
+                <span className="map-popup-description">
+                  {marker.things.map((t) => t.name).join(', ')}
+                </span>
               </>
             )}
+            <br />
+            <Link to={`/user/${marker.userId}`} className="map-popup-link">
+              View all things
+            </Link>
           </Popup>
         </Marker>
       ))}

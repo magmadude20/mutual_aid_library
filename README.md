@@ -53,7 +53,7 @@ Below is some AI stuff that's hopefully useful.
    create policy "Allow public read" on items for select using (true);
    ```
 
-4. **Groups and sharing:** Run the migration in `supabase/migrations/001_groups_and_sharing.sql` in the Supabase SQL Editor. This creates `groups`, `group_members`, `things_to_groups`, adds `is_public` to `items`, sets up RLS, and adds the `join_group_by_token` and `get_group_by_invite_token` RPCs. Your `items` table must have `user_id` (uuid references auth.users) for RLS to work.
+4. **Groups and sharing:** Run the migrations in `supabase/migrations/` in order (001 then 002) in the Supabase SQL Editor. 001 creates `groups`, `group_members`, `things_to_groups`, adds `is_public` to `items`, and sets up RLS. 002 adds `latitude` and `longitude` to `profiles` for the user’s location (one location per user; used on the Thing library map).
 
 5. Restart the dev server after changing env vars (`npm start`).
 

@@ -1,11 +1,7 @@
 import { useState, useEffect } from 'react';
-import LocationPicker from './LocationPicker';
 import { useOwnerGroups } from '../hooks/useOwnerGroups';
 import { supabase } from '../lib/supabaseClient';
 import './MyThingsPanel.css';
-
-const DEFAULT_LAT = 36.16473;
-const DEFAULT_LNG = -86.774204;
 
 function MyThingsPanel({
   user,
@@ -22,26 +18,21 @@ function MyThingsPanel({
   const {
     name,
     description,
-    latitude,
-    longitude,
     formError,
     submitting,
     isPublic,
     sharingGroupIds,
     onNameChange,
     onDescriptionChange,
-    onLocationSelect,
     onIsPublicChange,
     onToggleSharingGroup,
     onCancelAdd,
   } = addForm;
 
   const [selectedIds, setSelectedIds] = useState([]);
-  const [bulkModal, setBulkModal] = useState(null); // 'sharing' | 'location' | 'delete'
+  const [bulkModal, setBulkModal] = useState(null); // 'sharing' | 'delete'
   const [bulkSharingPublic, setBulkSharingPublic] = useState(true);
   const [bulkSharingGroupIds, setBulkSharingGroupIds] = useState([]);
-  const [bulkLocationLat, setBulkLocationLat] = useState(DEFAULT_LAT);
-  const [bulkLocationLng, setBulkLocationLng] = useState(DEFAULT_LNG);
   const [bulkSaving, setBulkSaving] = useState(false);
   const [bulkError, setBulkError] = useState(null);
   const [bulkDeleteSubmitting, setBulkDeleteSubmitting] = useState(false);
@@ -95,13 +86,6 @@ function MyThingsPanel({
   }
 
   function openBulkAction(action) {
-    if (action === 'location' && selectedIds.length > 0) {
-      const first = myThings.find((t) => t.id === selectedIds[0]);
-      if (first?.latitude != null && first?.longitude != null) {
-        setBulkLocationLat(first.latitude);
-        setBulkLocationLng(first.longitude);
-      }
-    }
     setBulkModal(action);
     setBulkError(null);
   }
@@ -116,7 +100,7 @@ function MyThingsPanel({
           .from('items')
           .update({ is_public: bulkSharingPublic })
           .eq('id', thingId)
-          .select('id, name, description, latitude, longitude, user_id, is_public')
+          .select('id, name, description, user_id, is_public')
           .single();
         if (updateError) throw updateError;
         await supabase.from('things_to_groups').delete().eq('thing_id', thingId);
@@ -148,35 +132,6 @@ function MyThingsPanel({
     setBulkSharingGroupIds((prev) =>
       prev.includes(groupId) ? prev.filter((id) => id !== groupId) : [...prev, groupId]
     );
-  }
-
-  async function handleBulkLocationSave(e) {
-    e.preventDefault();
-    setBulkSaving(true);
-    setBulkError(null);
-    try {
-      for (const thingId of selectedIds) {
-        const { error: updateError } = await supabase
-          .from('items')
-          .update({ latitude: bulkLocationLat, longitude: bulkLocationLng })
-          .eq('id', thingId)
-          .select('id, name, description, latitude, longitude, user_id, is_public')
-          .single();
-        if (updateError) throw updateError;
-        setMyThings((prev) =>
-          prev.map((t) =>
-            t.id === thingId
-              ? { ...t, latitude: bulkLocationLat, longitude: bulkLocationLng }
-              : t
-          )
-        );
-      }
-      clearSelection();
-    } catch (err) {
-      setBulkError(err.message || 'Failed to update location.');
-    } finally {
-      setBulkSaving(false);
-    }
   }
 
   async function handleBulkDeleteConfirm() {
@@ -256,15 +211,6 @@ function MyThingsPanel({
               rows={3}
               disabled={submitting}
             />
-            <div className="form-map-section">
-              <label className="form-label">Location (click map to set)</label>
-              <div className="location-picker-wrapper">
-                <LocationPicker
-                  selectedPoint={{ lat: latitude, lng: longitude }}
-                  onSelect={onLocationSelect}
-                />
-              </div>
-            </div>
             <div className="add-thing-form-sharing">
               <p className="add-thing-form-sharing-title">Sharing</p>
               <div className="form-checkbox-row">
@@ -330,7 +276,6 @@ function MyThingsPanel({
           >
             <option value="">Choose action…</option>
             <option value="sharing">Edit sharing</option>
-            <option value="location">Edit location</option>
             <option value="delete">Delete</option>
           </select>
           <button type="button" className="header-button" onClick={clearSelection}>
@@ -431,39 +376,6 @@ function MyThingsPanel({
                   ))}
                 </>
               )}
-              <div className="my-things-modal-actions">
-                <button type="button" className="header-button" onClick={clearSelection} disabled={bulkSaving}>
-                  Cancel
-                </button>
-                <button type="submit" className="submit-button" disabled={bulkSaving}>
-                  {bulkSaving ? 'Saving…' : 'Save'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Bulk Edit location modal */}
-      {bulkModal === 'location' && (
-        <div className="my-things-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="bulk-location-title">
-          <div className="my-things-modal-card">
-            <h3 id="bulk-location-title">Edit location for {selectedCount} things</h3>
-            <p className="modal-text">Set the same location for all selected things.</p>
-            <form onSubmit={handleBulkLocationSave}>
-              {bulkError && <p className="form-error" role="alert">{bulkError}</p>}
-              <div className="form-map-section">
-                <label className="form-label">Location (click map to set)</label>
-                <div className="location-picker-wrapper">
-                  <LocationPicker
-                    selectedPoint={{ lat: bulkLocationLat, lng: bulkLocationLng }}
-                    onSelect={(lat, lng) => {
-                      setBulkLocationLat(lat);
-                      setBulkLocationLng(lng);
-                    }}
-                  />
-                </div>
-              </div>
               <div className="my-things-modal-actions">
                 <button type="button" className="header-button" onClick={clearSelection} disabled={bulkSaving}>
                   Cancel

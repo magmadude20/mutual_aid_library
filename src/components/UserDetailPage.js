@@ -16,34 +16,33 @@ function UserDetailPage({ user }) {
   const { fullName, contactInfo, latitude, longitude, loading: profileLoading, error: profileError, refetch: refetchProfile } = useUserProfile(userId);
   const { things, loading: thingsLoading, error: thingsError } = useUserVisibleThings(userId);
 
-  const [editing, setEditing] = useState(false);
+  const [editingProfile, setEditingProfile] = useState(false);
   const [editFullName, setEditFullName] = useState('');
   const [editContactInfo, setEditContactInfo] = useState('');
   const [editLatitude, setEditLatitude] = useState(DEFAULT_LAT);
   const [editLongitude, setEditLongitude] = useState(DEFAULT_LNG);
-  const [editError, setEditError] = useState(null);
-  const [editMessage, setEditMessage] = useState('');
+  const [saveError, setSaveError] = useState(null);
+  const [saveMessage, setSaveMessage] = useState('');
   const [saving, setSaving] = useState(false);
 
   const isSelf = user?.id === userId;
 
   useEffect(() => {
-    if (editing && isSelf) {
+    if (editingProfile) {
       setEditFullName(fullName ?? '');
       setEditContactInfo(contactInfo ?? '');
       setEditLatitude(latitude != null && Number.isFinite(latitude) ? latitude : DEFAULT_LAT);
       setEditLongitude(longitude != null && Number.isFinite(longitude) ? longitude : DEFAULT_LNG);
-      setEditError(null);
-      setEditMessage('');
+      setSaveError(null);
+      setSaveMessage('');
     }
-  }, [editing, isSelf, fullName, contactInfo, latitude, longitude]);
+  }, [editingProfile, fullName, contactInfo, latitude, longitude]);
 
-  async function handleEditSave(e) {
+  async function handleSaveProfile(e) {
     e.preventDefault();
-    if (!isSelf || !userId) return;
     setSaving(true);
-    setEditError(null);
-    setEditMessage('');
+    setSaveError(null);
+    setSaveMessage('');
     try {
       const { error: upsertError } = await supabase.from('profiles').upsert({
         id: userId,
@@ -53,11 +52,11 @@ function UserDetailPage({ user }) {
         longitude: editLongitude,
       });
       if (upsertError) throw upsertError;
-      setEditMessage('Profile saved.');
+      setSaveMessage('Profile saved.');
       await refetchProfile();
-      setEditing(false);
+      setEditingProfile(false);
     } catch (err) {
-      setEditError(err.message || 'Failed to save profile.');
+      setSaveError(err.message || 'Failed to save profile.');
     } finally {
       setSaving(false);
     }
@@ -92,16 +91,31 @@ function UserDetailPage({ user }) {
       <button type="button" className="back-link" onClick={() => navigate(-1)}>
         ← Back
       </button>
-
-      {isSelf && editing ? (
-        <section className="user-detail-edit" aria-label="Edit profile">
-          <h2 className="user-detail-edit-title">Edit profile</h2>
-          <form onSubmit={handleEditSave} className="user-detail-edit-form">
-            {editError && <p className="form-error" role="alert">{editError}</p>}
-            {editMessage && <p className="user-detail-edit-message">{editMessage}</p>}
-            <label className="form-label" htmlFor="user-edit-full-name">Display name</label>
+      <header className="user-detail-header">
+        <div className="user-detail-name-row">
+          <h2 className="user-detail-name">{fullName || 'Unknown'}</h2>
+          {isSelf && (
+            <>
+              <span className="user-detail-badge">You</span>
+              {!editingProfile && (
+                <button
+                  type="button"
+                  className="header-button user-detail-edit-btn"
+                  onClick={() => setEditingProfile(true)}
+                >
+                  Edit
+                </button>
+              )}
+            </>
+          )}
+        </div>
+        {isSelf && editingProfile ? (
+          <form onSubmit={handleSaveProfile} className="user-detail-edit-form" aria-label="Edit profile">
+            {saveError && <p className="form-error" role="alert">{saveError}</p>}
+            {saveMessage && <p className="user-detail-save-message">{saveMessage}</p>}
+            <label className="form-label" htmlFor="user-edit-name">Display name</label>
             <input
-              id="user-edit-full-name"
+              id="user-edit-name"
               type="text"
               className="form-input"
               value={editFullName}
@@ -112,7 +126,7 @@ function UserDetailPage({ user }) {
             />
             <label className="form-label" htmlFor="user-edit-contact">Contact info</label>
             <p className="form-hint">
-              How others can reach you (phone, email, <a href="https://signal.org/blog/phone-number-privacy-usernames/" target="_blank" rel="noopener noreferrer">Signal username</a>, etc.)
+              How others can reach you (e.g. <a href="https://signal.org/blog/phone-number-privacy-usernames/" target="_blank" rel="noopener noreferrer">Signal username</a>)
             </p>
             <textarea
               id="user-edit-contact"
@@ -143,40 +157,22 @@ function UserDetailPage({ user }) {
               <button
                 type="button"
                 className="header-button"
-                onClick={() => setEditing(false)}
+                onClick={() => { setEditingProfile(false); setSaveError(null); }}
                 disabled={saving}
               >
                 Cancel
               </button>
             </div>
           </form>
-        </section>
-      ) : (
-        <>
-          <header className="user-detail-header">
-            <div className="user-detail-name-row">
-              <h2 className="user-detail-name">{fullName || 'Unknown'}</h2>
-              {isSelf && (
-                <>
-                  <span className="user-detail-badge">You</span>
-                  <button
-                    type="button"
-                    className="header-button"
-                    onClick={() => setEditing(true)}
-                  >
-                    Edit
-                  </button>
-                </>
-              )}
-            </div>
-            {contactInfo && (
-              <p className="user-detail-contact">
-                <span className="user-detail-contact-label">Contact:</span> {contactInfo}
-              </p>
-            )}
-          </header>
+        ) : null}
+        {!editingProfile && contactInfo && (
+          <p className="user-detail-contact">
+            <span className="user-detail-contact-label">Contact:</span> {contactInfo}
+          </p>
+        )}
+      </header>
 
-          {locationMarker.length > 0 && (
+      {locationMarker.length > 0 && !editingProfile && (
         <section className="user-detail-location" aria-label="Location">
           <h3 className="map-section-title">Location</h3>
           <div className="map-wrapper user-detail-map">
@@ -213,8 +209,6 @@ function UserDetailPage({ user }) {
           </ul>
         )}
       </section>
-        </>
-      )}
     </div>
   );
 }

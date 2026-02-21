@@ -31,20 +31,24 @@
 }
 
 .header-button,
-.logout-button {
+.logout-button,
+.back-link {
   padding: 0.35rem 0.75rem;
   font-size: 0.85rem;
+  font-weight: 600;
   color: #e4e6eb;
-  background: transparent;
+  background-color: #25282e;
+  /* background: transparent; */
   border-radius: 999px;
-  border: 1px solid #4b5563;
+  border: 2px solid #727272;
   cursor: pointer;
   text-decoration: none;
   white-space: nowrap;
 }
 
 .header-button:hover,
-.logout-button:hover {
+.logout-button:hover,
+.back-link:hover {
   background: #374151;
 }
 

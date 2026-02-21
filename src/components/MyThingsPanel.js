@@ -261,42 +261,49 @@ function MyThingsPanel({
           </form>
         </div>
       )}
-      {selectedCount > 0 && (
-        <div className="my-things-bulk-toolbar">
-          <span className="bulk-toolbar-label">{selectedCount} selected</span>
-          <select
-            className="bulk-action-select"
-            value=""
-            onChange={(e) => {
-              const v = e.target.value;
-              if (v) openBulkAction(v);
-              e.target.value = '';
-            }}
-            aria-label="Bulk action"
-          >
-            <option value="">Choose action…</option>
-            <option value="sharing">Edit sharing</option>
-            <option value="delete">Delete</option>
-          </select>
-          <button type="button" className="header-button" onClick={clearSelection}>
-            Clear selection
-          </button>
-        </div>
-      )}
       {!myThingsLoading && !myThingsError && myThings.length > 0 && (
         <>
-          {!myThings.every((t) => selectedIds.includes(t.id)) && (
-            <div className="my-things-list-actions">
+          <div className="my-things-bulk-toolbar">
+            <div className="bulk-toolbar-row bulk-toolbar-row-buttons">
               <button
                 type="button"
                 className="header-button"
                 onClick={selectAll}
+                disabled={myThings.every((t) => selectedIds.includes(t.id))}
                 aria-label="Select all"
               >
                 Select all
               </button>
+              {selectedCount > 0 && (
+                <button type="button" className="header-button" onClick={clearSelection}>
+                  Clear selection
+                </button>
+              )}
             </div>
-          )}
+            {selectedCount > 0 && (
+              <>
+                <div className="bulk-toolbar-row">
+                  <span className="bulk-toolbar-label">{selectedCount} selected</span>
+                </div>
+                <div className="bulk-toolbar-row">
+                  <select
+                    className="bulk-action-select"
+                    value=""
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      if (v) openBulkAction(v);
+                      e.target.value = '';
+                    }}
+                    aria-label="Bulk action"
+                  >
+                    <option value="">Choose action…</option>
+                    <option value="sharing">Edit sharing</option>
+                    <option value="delete">Delete</option>
+                  </select>
+                </div>
+              </>
+            )}
+          </div>
           <ul className="things-list" aria-label="My things">
             {myThings.map((thing) => (
               <li key={thing.id} className="thing-list-row">

@@ -7,11 +7,11 @@ export function useUserProfile(userId) {
   const [error, setError] = useState(null);
 
   const refetch = useCallback(() => {
-    if (!userId) return Promise.resolve();
+    if (!userId) return;
     let isMounted = true;
     setLoading(true);
     setError(null);
-    return (async () => {
+    (async () => {
       try {
         const { data, error: fetchError } = await supabase
           .from('profiles')

@@ -24,6 +24,16 @@
   font-weight: 600;
 }
 
+.user-detail-edit-btn {
+  flex-shrink: 0;
+}
+
+.user-detail-save-message {
+  font-size: 0.9rem;
+  color: #9ca3af;
+  margin: 0 0 0.5rem;
+}
+
 .user-detail-badge {
   font-size: 0.8rem;
   font-weight: 500;
@@ -77,6 +87,10 @@
   margin: 0 0 1rem;
   font-size: 1.2rem;
   font-weight: 600;
+}
+
+.user-detail-edit-form {
+  margin-top: 1rem;
 }
 
 .user-detail-edit-form .form-label {

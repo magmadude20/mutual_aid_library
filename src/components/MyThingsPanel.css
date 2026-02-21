@@ -70,10 +70,6 @@
   min-width: 0;
 }
 
-.my-things-list-actions {
-  margin-bottom: 0.5rem;
-}
-
 .thing-list-row {
   display: flex;
   align-items: center;
@@ -91,11 +87,31 @@
 
 .my-things-bulk-toolbar {
   display: flex;
-  align-items: center;
-  flex-wrap: wrap;
+  flex-direction: column;
   gap: 0.5rem;
   margin-bottom: 1rem;
   padding: 0.5rem 0;
+}
+
+.bulk-toolbar-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.bulk-toolbar-row-buttons {
+  flex-wrap: wrap;
+}
+
+.my-things-bulk-toolbar .header-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  color: #9ca3af;
+  border-color: #374151;
+}
+
+.my-things-bulk-toolbar .header-button:disabled:hover {
+  background: transparent;
 }
 
 .bulk-toolbar-label {

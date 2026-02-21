@@ -165,6 +165,11 @@ function UserDetailPage({ user }) {
             </div>
           </form>
         ) : null}
+        {isSelf && user?.email && !editingProfile && (
+          <p className="user-detail-email">
+            <span className="user-detail-contact-label">Email:</span> {user.email}
+          </p>
+        )}
         {!editingProfile && contactInfo && (
           <p className="user-detail-contact">
             <span className="user-detail-contact-label">Contact:</span> {contactInfo}
@@ -181,34 +186,34 @@ function UserDetailPage({ user }) {
         </section>
       )}
 
-      <section className="user-detail-things" aria-label="Things">
-        <h3 className="map-section-title">
-          {isSelf ? 'Your things' : "Things you can check out"}
-        </h3>
-        {thingsLoading && <p className="status">Loading things…</p>}
-        {thingsError && <p className="status error" role="alert">{thingsError}</p>}
-        {!thingsLoading && !thingsError && things.length === 0 && (
-          <p className="status">{isSelf ? "You haven't shared any things yet." : 'No things here.'}</p>
-        )}
-        {!thingsLoading && !thingsError && things.length > 0 && (
-          <ul className="user-detail-things-list" aria-label="Things">
-            {things.map((thing) => (
-              <li key={thing.id}>
-                <button
-                  type="button"
-                  className="thing-card thing-card-clickable"
-                  onClick={() => navigate(`/thing/${thing.id}`, { state: { thing } })}
-                >
-                  <div className="thing-name">{thing.name}</div>
-                  {thing.description && (
-                    <div className="thing-description">{thing.description}</div>
-                  )}
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+      {!isSelf && (
+        <section className="user-detail-things" aria-label="Things">
+          <h3 className="map-section-title">Things you can check out</h3>
+          {thingsLoading && <p className="status">Loading things…</p>}
+          {thingsError && <p className="status error" role="alert">{thingsError}</p>}
+          {!thingsLoading && !thingsError && things.length === 0 && (
+            <p className="status">No things here.</p>
+          )}
+          {!thingsLoading && !thingsError && things.length > 0 && (
+            <ul className="user-detail-things-list" aria-label="Things">
+              {things.map((thing) => (
+                <li key={thing.id}>
+                  <button
+                    type="button"
+                    className="thing-card thing-card-clickable"
+                    onClick={() => navigate(`/thing/${thing.id}`, { state: { thing } })}
+                  >
+                    <div className="thing-name">{thing.name}</div>
+                    {thing.description && (
+                      <div className="thing-description">{thing.description}</div>
+                    )}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      )}
     </div>
   );
 }

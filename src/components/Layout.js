@@ -3,11 +3,8 @@ import { Outlet, useLocation, NavLink } from 'react-router-dom';
 function Layout({ user, logout }) {
   const location = useLocation();
   const pathname = location.pathname;
-  const isOwnProfile = user?.id && pathname === `/user/${user.id}`;
   const hideTabs =
-    pathname.startsWith('/join/') ||
-    pathname.startsWith('/groups/') ||
-    (pathname.startsWith('/user/') && !isOwnProfile);
+    pathname.startsWith('/join/');
 
   return (
     <div className="App">

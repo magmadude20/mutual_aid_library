@@ -127,6 +127,7 @@ function App() {
           index
           element={
             <ThingsPanel
+              user={user}
               things={things}
               loading={thingsLoading}
               error={thingsError}

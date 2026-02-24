@@ -30,15 +30,6 @@ function Layout({ user, logout }) {
               Thing library
             </NavLink>
             <NavLink
-              to="/my-things"
-              role="tab"
-              aria-controls="mythings-panel"
-              id="mythings-tab"
-              className={({ isActive }) => `tab ${isActive ? 'tab-active' : ''}`}
-            >
-              My things
-            </NavLink>
-            <NavLink
               to="/groups"
               end
               role="tab"
@@ -46,7 +37,7 @@ function Layout({ user, logout }) {
               id="groups-tab"
               className={({ isActive }) => `tab ${isActive ? 'tab-active' : ''}`}
             >
-              My groups
+              Groups
             </NavLink>
             {user?.id && (
               <NavLink

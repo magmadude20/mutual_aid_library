@@ -53,8 +53,38 @@
   border-bottom: 1px solid #3a3f47;
 }
 
+.member-main {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
 .member-name {
   font-weight: 500;
+}
+
+.member-name-button {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+
+.member-name-button:hover {
+  text-decoration: underline;
+}
+
+.member-you-badge {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #9ca3af;
+  background: #374151;
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
 }
 
 .member-role {

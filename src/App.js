@@ -9,7 +9,6 @@ import Login from './components/Login';
 import Layout from './components/Layout';
 import ThingDetailRoute from './components/ThingDetailRoute';
 import ThingsPanel from './components/ThingsPanel';
-import MyThingsPanel from './components/MyThingsPanel';
 import JoinGroupPage from './components/JoinGroupPage';
 import GroupsListPage from './components/GroupsListPage';
 import CreateGroupPage from './components/CreateGroupPage';
@@ -96,9 +95,17 @@ function App() {
     navigate(`/thing/${thing.id}`, { state: { thing } });
   };
 
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } finally {
+      navigate('/', { replace: true });
+    }
+  };
+
   return (
     <Routes>
-      <Route path="/" element={<Layout user={user} logout={logout} />}>
+      <Route path="/" element={<Layout user={user} logout={handleLogout} />}>
         <Route
           index
           element={
@@ -113,8 +120,30 @@ function App() {
         />
         <Route
           path="my-things"
+          element={<Navigate to={user?.id ? `/user/${user.id}` : '/'} replace />}
+        />
+        <Route
+          path="thing/:id"
           element={
-            <MyThingsPanel
+            <ThingDetailRoute
+              user={user}
+              setThings={setThings}
+              setMyThings={setMyThings}
+            />
+          }
+        />
+        <Route
+          path="settings"
+          element={<Navigate to={user?.id ? `/user/${user.id}` : '/'} replace />}
+        />
+        <Route path="join/:inviteToken" element={<JoinGroupPage user={user} />} />
+        <Route path="groups" element={<GroupsListPage user={user} />} />
+        <Route path="groups/new" element={<CreateGroupPage user={user} />} />
+        <Route path="groups/:groupId" element={<GroupDetailPage user={user} />} />
+        <Route
+          path="user/:userId"
+          element={
+            <UserDetailPage
               user={user}
               myThings={myThings}
               setMyThings={setMyThings}
@@ -150,25 +179,6 @@ function App() {
             />
           }
         />
-        <Route
-          path="thing/:id"
-          element={
-            <ThingDetailRoute
-              user={user}
-              setThings={setThings}
-              setMyThings={setMyThings}
-            />
-          }
-        />
-        <Route
-          path="settings"
-          element={<Navigate to={user?.id ? `/user/${user.id}` : '/'} replace />}
-        />
-        <Route path="join/:inviteToken" element={<JoinGroupPage user={user} />} />
-        <Route path="groups" element={<GroupsListPage user={user} />} />
-        <Route path="groups/new" element={<CreateGroupPage user={user} />} />
-        <Route path="groups/:groupId" element={<GroupDetailPage user={user} />} />
-        <Route path="user/:userId" element={<UserDetailPage user={user} />} />
       </Route>
     </Routes>
   );

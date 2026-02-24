@@ -31,15 +31,6 @@ function GroupsListPage({ user }) {
     }
   }
 
-  async function copyInviteLink(inviteToken) {
-    const url = `${window.location.origin}/join/${inviteToken}`;
-    try {
-      await navigator.clipboard.writeText(url);
-    } catch {
-      // ignore
-    }
-  }
-
   return (
     <div className="groups-list-page">
       <div className="groups-list-header">
@@ -64,14 +55,6 @@ function GroupsListPage({ user }) {
                   {memberCountByGroupId[g.id] ?? 0} users sharing {thingCountByGroupId[g.id] ?? 0} things
                 </span>
               </Link>
-              <button
-                type="button"
-                className="header-button group-copy-invite"
-                onClick={(e) => { e.preventDefault(); copyInviteLink(g.invite_token); }}
-                title="Copy invite link"
-              >
-                Copy invite link
-              </button>
             </li>
           ))}
         </ul>

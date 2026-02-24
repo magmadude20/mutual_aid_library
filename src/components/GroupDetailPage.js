@@ -304,7 +304,18 @@ function GroupDetailPage({ user }) {
           <ul className="group-members-list">
             {members.map((m) => (
               <li key={m.user_id}>
-                <span className="member-name">{m.full_name || m.user_id}</span>
+                <div className="member-main">
+                  <button
+                    type="button"
+                    className="member-name member-name-button"
+                    onClick={() => navigate(`/user/${m.user_id}`)}
+                  >
+                    {m.full_name || '<new user>'}
+                  </button>
+                  {m.user_id === user?.id && (
+                    <span className="member-you-badge">You</span>
+                  )}
+                </div>
                 <span className="member-role">{m.role}</span>
               </li>
             ))}

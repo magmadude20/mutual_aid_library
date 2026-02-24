@@ -13,7 +13,7 @@ import shadowUrl from 'leaflet/dist/images/marker-shadow.png';
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({ iconUrl, iconRetinaUrl, shadowUrl });
 
-const DEFAULT_CENTER = [40.7, -74.0];
+const DEFAULT_CENTER = [45, -93];
 const DEFAULT_ZOOM = 10;
 
 function FitBounds({ markers }) {

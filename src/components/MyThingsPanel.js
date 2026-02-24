@@ -14,6 +14,7 @@ function MyThingsPanel({
   addForm,
   onAddSubmit,
   onSelectThing,
+  canAddThings = true,
 }) {
   const {
     name,
@@ -166,17 +167,23 @@ function MyThingsPanel({
           type="button"
           className="header-button my-things-add-button"
           onClick={() => onShowAddForm(!showAddForm)}
+          disabled={submitting || !canAddThings}
         >
           {showAddForm ? 'Cancel' : '+ Add new thing'}
         </button>
       </div>
+      {!canAddThings && (
+        <p className="my-things-profile-warning" role="alert">
+          You need to add your name and contact info before adding any things.
+        </p>
+      )}
       {myThingsLoading && <p className="status">Loading your things…</p>}
       {myThingsError && (
         <p className="status error" role="alert">
           {myThingsError}
         </p>
       )}
-      {showAddForm && (
+      {showAddForm && canAddThings && (
         <div className="my-things-add-form-wrapper">
           <form className="add-thing-form" onSubmit={onAddSubmit} aria-label="Add thing">
             <h2 className="form-title">Add thing</h2>

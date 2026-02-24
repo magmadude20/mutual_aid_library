@@ -29,6 +29,17 @@
   flex-shrink: 0;
 }
 
+.header-button.user-detail-edit-btn-setup {
+  color: #022c22;
+  background-color: #22c55e;
+  border-color: #16a34a;
+}
+
+.header-button.user-detail-edit-btn-setup:hover {
+  background-color: #16a34a;
+  border-color: #15803d;
+}
+
 .user-detail-delete-account-btn {
   border-color: #dc2626;
   color: #fca5a5;
@@ -65,6 +76,10 @@
 }
 
 .user-detail-location {
+  margin-top: 1.5rem;
+}
+
+.user-detail-my-things-section {
   margin-top: 1.5rem;
 }
 

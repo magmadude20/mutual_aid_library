@@ -5,12 +5,24 @@ import { useUserProfile } from '../hooks/useUserProfile';
 import { useUserVisibleThings } from '../hooks/useUserVisibleThings';
 import Map from './Map';
 import LocationPicker from './LocationPicker';
+import MyThingsPanel from './MyThingsPanel';
 import './UserDetailPage.css';
 
-const DEFAULT_LAT = 36.16473;
-const DEFAULT_LNG = -86.774204;
+const DEFAULT_LAT = 45;
+const DEFAULT_LNG = -93;
 
-function UserDetailPage({ user }) {
+function UserDetailPage({
+  user,
+  myThings,
+  setMyThings,
+  myThingsLoading,
+  myThingsError,
+  showAddForm,
+  onShowAddForm,
+  addForm,
+  onAddSubmit,
+  onSelectThing,
+}) {
   const { userId } = useParams();
   const navigate = useNavigate();
   const { fullName, contactInfo, latitude, longitude, loading: profileLoading, error: profileError, refetch: refetchProfile } = useUserProfile(userId);
@@ -43,14 +55,20 @@ function UserDetailPage({ user }) {
 
   async function handleSaveProfile(e) {
     e.preventDefault();
-    setSaving(true);
     setSaveError(null);
     setSaveMessage('');
+    const nextFullName = editFullName.trim();
+    const nextContactInfo = editContactInfo.trim();
+    if (!nextFullName || !nextContactInfo) {
+      setSaveError('Display name and contact info are required.');
+      return;
+    }
+    setSaving(true);
     try {
       const { error: upsertError } = await supabase.from('profiles').upsert({
         id: userId,
-        full_name: editFullName.trim() || null,
-        contact_info: editContactInfo.trim() ?? '',
+        full_name: nextFullName,
+        contact_info: nextContactInfo,
         latitude: editLatitude,
         longitude: editLongitude,
       });
@@ -80,6 +98,11 @@ function UserDetailPage({ user }) {
       setDeleteSubmitting(false);
     }
   }
+
+  const needsProfileSetup =
+    isSelf &&
+    (((fullName ?? '').toString().trim() === '') ||
+      ((contactInfo ?? '').toString().trim() === ''));
 
   const locationMarker =
     latitude != null && longitude != null
@@ -112,7 +135,7 @@ function UserDetailPage({ user }) {
       </button>
       <header className="user-detail-header">
         <div className="user-detail-name-row">
-          <h2 className="user-detail-name">{fullName || 'Unknown'}</h2>
+          <h2 className="user-detail-name">{fullName || 'New user'}</h2>
           {isSelf && (
             <>
               <span className="user-detail-badge">You</span>
@@ -120,10 +143,10 @@ function UserDetailPage({ user }) {
                 <>
                   <button
                     type="button"
-                    className="header-button user-detail-edit-btn"
+                    className={`header-button user-detail-edit-btn${needsProfileSetup ? ' user-detail-edit-btn-setup' : ''}`}
                     onClick={() => setEditingProfile(true)}
                   >
-                    Edit
+                    {needsProfileSetup ? 'Set up profile' : 'Edit'}
                   </button>
                   <button
                     type="button"
@@ -151,6 +174,7 @@ function UserDetailPage({ user }) {
               placeholder="Your name"
               disabled={saving}
               autoComplete="name"
+              required
             />
             <label className="form-label" htmlFor="user-edit-contact">Contact info</label>
             <p className="form-hint">
@@ -164,6 +188,7 @@ function UserDetailPage({ user }) {
               placeholder="How others can reach you"
               rows={3}
               disabled={saving}
+              required
             />
             <div className="form-map-section">
               <label className="form-label">Your location</label>
@@ -211,6 +236,24 @@ function UserDetailPage({ user }) {
           <div className="map-wrapper user-detail-map">
             <Map markers={locationMarker} />
           </div>
+        </section>
+      )}
+
+      {isSelf && (
+        <section className="user-detail-my-things-section" aria-label="My things">
+          <MyThingsPanel
+            user={user}
+            myThings={myThings}
+            setMyThings={setMyThings}
+            myThingsLoading={myThingsLoading}
+            myThingsError={myThingsError}
+            showAddForm={showAddForm}
+            onShowAddForm={onShowAddForm}
+            addForm={addForm}
+            onAddSubmit={onAddSubmit}
+            onSelectThing={onSelectThing}
+            canAddThings={!needsProfileSetup}
+          />
         </section>
       )}
 

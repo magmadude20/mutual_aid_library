@@ -24,6 +24,9 @@ function UserDetailPage({ user }) {
   const [saveError, setSaveError] = useState(null);
   const [saveMessage, setSaveMessage] = useState('');
   const [saving, setSaving] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [deleteSubmitting, setDeleteSubmitting] = useState(false);
+  const [deleteError, setDeleteError] = useState(null);
 
   const isSelf = user?.id === userId;
 
@@ -59,6 +62,22 @@ function UserDetailPage({ user }) {
       setSaveError(err.message || 'Failed to save profile.');
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function handleDeleteAccount() {
+    setDeleteError(null);
+    setDeleteSubmitting(true);
+    try {
+      const { error } = await supabase.from('profiles').delete().eq('id', userId);
+      if (error) throw error;
+      setDeleteConfirmOpen(false);
+      navigate('/', { replace: true });
+      await supabase.auth.signOut();
+    } catch (err) {
+      setDeleteError(err.message || 'Failed to delete profile.');
+    } finally {
+      setDeleteSubmitting(false);
     }
   }
 
@@ -98,13 +117,22 @@ function UserDetailPage({ user }) {
             <>
               <span className="user-detail-badge">You</span>
               {!editingProfile && (
-                <button
-                  type="button"
-                  className="header-button user-detail-edit-btn"
-                  onClick={() => setEditingProfile(true)}
-                >
-                  Edit
-                </button>
+                <>
+                  <button
+                    type="button"
+                    className="header-button user-detail-edit-btn"
+                    onClick={() => setEditingProfile(true)}
+                  >
+                    Edit
+                  </button>
+                  <button
+                    type="button"
+                    className="header-button user-detail-delete-account-btn"
+                    onClick={() => { setDeleteConfirmOpen(true); setDeleteError(null); }}
+                  >
+                    Delete account
+                  </button>
+                </>
               )}
             </>
           )}
@@ -213,6 +241,36 @@ function UserDetailPage({ user }) {
             </ul>
           )}
         </section>
+      )}
+
+      {deleteConfirmOpen && (
+        <div className="user-detail-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="delete-account-modal-title">
+          <div className="user-detail-modal-card">
+            <h3 id="delete-account-modal-title" className="user-detail-modal-title">Delete account?</h3>
+            <p className="user-detail-modal-text">This cannot be undone. Your profile, things, and group memberships will be removed.</p>
+            {deleteError && (
+              <p className="form-error user-detail-modal-error" role="alert">{deleteError}</p>
+            )}
+            <div className="user-detail-modal-actions">
+              <button
+                type="button"
+                className="header-button"
+                onClick={() => { setDeleteConfirmOpen(false); setDeleteError(null); }}
+                disabled={deleteSubmitting}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="user-detail-modal-delete-button"
+                onClick={handleDeleteAccount}
+                disabled={deleteSubmitting}
+              >
+                {deleteSubmitting ? 'Deleting…' : 'Delete account'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

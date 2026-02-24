@@ -24,8 +24,18 @@
   font-weight: 600;
 }
 
-.user-detail-edit-btn {
+.user-detail-edit-btn,
+.user-detail-delete-account-btn {
   flex-shrink: 0;
+}
+
+.user-detail-delete-account-btn {
+  border-color: #dc2626;
+  color: #fca5a5;
+}
+
+.user-detail-delete-account-btn:hover {
+  background: #7f1d1d;
 }
 
 .user-detail-save-message {
@@ -120,4 +130,66 @@
   display: flex;
   gap: 0.75rem;
   margin-top: 1.25rem;
+}
+
+.user-detail-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  z-index: 2000;
+}
+
+.user-detail-modal-card {
+  background: #25282e;
+  border: 1px solid #3a3f47;
+  border-radius: 8px;
+  padding: 1.25rem 1.5rem;
+  max-width: 360px;
+  width: 100%;
+}
+
+.user-detail-modal-title {
+  margin: 0 0 0.5rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.user-detail-modal-text {
+  margin: 0 0 1rem;
+  font-size: 0.9rem;
+  color: #9ca3af;
+}
+
+.user-detail-modal-error {
+  margin-bottom: 1rem;
+}
+
+.user-detail-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.user-detail-modal-delete-button {
+  padding: 0.35rem 0.75rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #fff;
+  background: #dc2626;
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.user-detail-modal-delete-button:hover:not(:disabled) {
+  background: #b91c1c;
+}
+
+.user-detail-modal-delete-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }

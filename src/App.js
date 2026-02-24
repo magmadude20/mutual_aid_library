@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
+import { useState } from 'react';
+import { Routes, Route, useNavigate, Navigate } from 'react-router-dom';
 import { supabase } from './lib/supabaseClient';
 import { useAuth } from './hooks/useAuth';
 import { useThings } from './hooks/useThings';
@@ -24,7 +24,6 @@ function App() {
 
   const [showAddForm, setShowAddForm] = useState(false);
   const navigate = useNavigate();
-  const location = useLocation();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [addFormIsPublic, setAddFormIsPublic] = useState(true);
@@ -32,29 +31,6 @@ function App() {
   const [formError, setFormError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const { groups: ownerGroups } = useOwnerGroups(user?.id);
-
-  useEffect(() => {
-    if (!user?.id || location.pathname === `/user/${user.id}`) return;
-    let isMounted = true;
-    (async () => {
-      try {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('full_name, contact_info')
-          .eq('id', user.id)
-          .maybeSingle();
-        if (!isMounted || error) return;
-        const hasName = (data?.full_name ?? '').toString().trim() !== '';
-        const hasContact = (data?.contact_info ?? '').toString().trim() !== '';
-        if (!hasName || !hasContact) {
-          navigate(`/user/${user.id}`, { replace: true });
-        }
-      } catch {
-        // ignore; don't redirect on fetch error
-      }
-    })();
-    return () => { isMounted = false; };
-  }, [user?.id, location.pathname, navigate]);
 
   async function handleAddSubmit(e) {
     e.preventDefault();

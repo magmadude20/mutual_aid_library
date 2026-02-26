@@ -77,6 +77,16 @@ function CreateGroupPage({ user }) {
           disabled={submitting}
           autoComplete="off"
         />
+        <label className="form-label" htmlFor="group-description">Description (optional)</label>
+        <textarea
+          id="group-description"
+          className="form-input form-textarea"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          placeholder="Description"
+          rows={3}
+          disabled={submitting}
+        />
         <div className="form-map-section">
           <label className="form-label">Location</label>
           <p className="form-hint">Click the map to set the group location (required).</p>
@@ -95,16 +105,6 @@ function CreateGroupPage({ user }) {
             />
           </div>
         </div>
-        <label className="form-label" htmlFor="group-description">Description (optional)</label>
-        <textarea
-          id="group-description"
-          className="form-input form-textarea"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          placeholder="Description"
-          rows={3}
-          disabled={submitting}
-        />
         <div className="form-checkbox-row">
           <input
             id="group-is-public"

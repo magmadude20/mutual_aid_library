@@ -98,7 +98,7 @@ function RequestsPanel({ user, requests, loading, error, onSelectRequest }) {
 
       {!loading && !error && (requests?.length ?? 0) === 0 && (
         <p className="status">
-          No requests yet. Add requests from My profile.
+          No requests yet. Join a group to see requests, or add your own from My profile.
         </p>
       )}
       {!loading && !error && (requests?.length ?? 0) > 0 && (

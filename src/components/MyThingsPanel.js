@@ -159,7 +159,7 @@ function MyThingsPanel({
         >
           {showAddForm ? 'Cancel' : '+ Add new thing'}
         </button>
-        {!myThingsLoading && !myThingsError && myThings.length > 0 && (
+        {!showAddForm && !myThingsLoading && !myThingsError && myThings.length > 0 && (
           <div className="my-things-header-bulk-buttons">
             <button
               type="button"

@@ -159,7 +159,7 @@ function MyRequestsPanel({
         >
           {showAddForm ? 'Cancel' : '+ Add new request'}
         </button>
-        {!myRequestsLoading && !myRequestsError && myRequests.length > 0 && (
+        {!showAddForm && !myRequestsLoading && !myRequestsError && myRequests.length > 0 && (
           <div className="my-things-header-bulk-buttons">
             <button
               type="button"

@@ -53,7 +53,7 @@ Below is some AI stuff that's hopefully useful.
    create policy "Allow public read" on items for select using (true);
    ```
 
-4. **Groups and sharing:** Run the migrations in `supabase/migrations/` in order (001 then 002) in the Supabase SQL Editor. 001 creates `groups`, `group_members`, `things_to_groups`, adds `is_public` to `items`, and sets up RLS. 002 adds `latitude` and `longitude` to `profiles` for the user’s location (one location per user; used on the Thing library map).
+4. **Groups and sharing:** Run the migrations in `supabase/migrations/` in order (001, 002, 005, etc.) in the Supabase SQL Editor. 001 creates `groups`, `group_members`, `things_to_groups`, and RLS. 002 adds `latitude` and `longitude` to `profiles` (legacy; no longer used). 005 adds `latitude` and `longitude` to `groups`. 006 drops `latitude` and `longitude` from `profiles` (run after app no longer uses profile location).
 
 5. Restart the dev server after changing env vars (`npm start`).
 

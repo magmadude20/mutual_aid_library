@@ -18,39 +18,13 @@ function ThingDetailPage({ thing, user, onBack, onThingUpdated, onThingDeleted }
   const isOwner = thing.user_id === user?.id;
   const { groups: ownerGroups, loading: ownerGroupsLoading } = useOwnerGroups(isOwner ? thing.user_id : null);
   const { groupIds: sharedGroupIds, refetch: refetchThingGroups } = useThingGroups(thing.id);
-  const [sharingPublic, setSharingPublic] = useState(thing.is_public !== false);
   const [sharingGroupIds, setSharingGroupIds] = useState([]);
   const [sharingSaving, setSharingSaving] = useState(false);
   const [sharingError, setSharingError] = useState(null);
 
   useEffect(() => {
-    setSharingPublic(thing.is_public !== false);
-  }, [thing.is_public]);
-
-  useEffect(() => {
     setSharingGroupIds(sharedGroupIds);
   }, [sharedGroupIds]);
-
-  async function handlePublicChange(checked) {
-    setSharingError(null);
-    setSharingPublic(checked);
-    setSharingSaving(true);
-    try {
-      const { data, error: updateError } = await supabase
-        .from('items')
-        .update({ is_public: checked })
-        .eq('id', thing.id)
-        .select('id, name, description, user_id, is_public')
-        .single();
-      if (updateError) throw updateError;
-      onThingUpdated(data);
-    } catch (err) {
-      setSharingPublic(thing.is_public !== false);
-      setSharingError(err.message || 'Failed to save.');
-    } finally {
-      setSharingSaving(false);
-    }
-  }
 
   async function handleGroupToggle(groupId) {
     const currentlyShared = sharingGroupIds.includes(groupId);
@@ -135,7 +109,7 @@ function ThingDetailPage({ thing, user, onBack, onThingUpdated, onThingDeleted }
           description: editDescription.trim() || null,
         })
         .eq('id', thing.id)
-        .select('id, name, description, user_id, is_public')
+        .select('id, name, description, user_id')
         .single();
 
       if (updateError) throw updateError;
@@ -271,16 +245,6 @@ function ThingDetailPage({ thing, user, onBack, onThingUpdated, onThingDeleted }
           <h3 className="map-section-title">Sharing</h3>
           <div className="thing-sharing-form">
             {sharingError && <p className="form-error" role="alert">{sharingError}</p>}
-            <div className="thing-sharing-checkbox-row">
-              <input
-                id="share-public"
-                type="checkbox"
-                checked={sharingPublic}
-                onChange={(e) => handlePublicChange(e.target.checked)}
-                disabled={sharingSaving}
-              />
-              <label className="form-label" htmlFor="share-public">Public (visible to everyone)</label>
-            </div>
             {!ownerGroupsLoading && ownerGroups.length > 0 && (
               <>
                 <div className="thing-sharing-groups-header">

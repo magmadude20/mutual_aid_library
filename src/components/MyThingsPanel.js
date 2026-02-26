@@ -21,18 +21,15 @@ function MyThingsPanel({
     description,
     formError,
     submitting,
-    isPublic,
     sharingGroupIds,
     onNameChange,
     onDescriptionChange,
-    onIsPublicChange,
     onToggleSharingGroup,
     onCancelAdd,
   } = addForm;
 
   const [selectedIds, setSelectedIds] = useState([]);
   const [bulkModal, setBulkModal] = useState(null); // 'sharing' | 'delete'
-  const [bulkSharingPublic, setBulkSharingPublic] = useState(true);
   const [bulkSharingGroupIds, setBulkSharingGroupIds] = useState([]);
   const [bulkSaving, setBulkSaving] = useState(false);
   const [bulkError, setBulkError] = useState(null);
@@ -97,22 +94,12 @@ function MyThingsPanel({
     setBulkError(null);
     try {
       for (const thingId of selectedIds) {
-        const { error: updateError } = await supabase
-          .from('items')
-          .update({ is_public: bulkSharingPublic })
-          .eq('id', thingId)
-          .select('id, name, description, user_id, is_public')
-          .single();
-        if (updateError) throw updateError;
         await supabase.from('things_to_groups').delete().eq('thing_id', thingId);
         if (bulkSharingGroupIds.length > 0) {
           await supabase
             .from('things_to_groups')
             .insert(bulkSharingGroupIds.map((group_id) => ({ thing_id: thingId, group_id })));
         }
-        setMyThings((prev) =>
-          prev.map((t) => (t.id === thingId ? { ...t, is_public: bulkSharingPublic } : t))
-        );
       }
       setSharedCountByThingId((prev) => {
         const next = { ...prev };
@@ -220,18 +207,6 @@ function MyThingsPanel({
             />
             <div className="add-thing-form-sharing">
               <p className="add-thing-form-sharing-title">Sharing</p>
-              <div className="form-checkbox-row">
-                <input
-                  id="add-thing-public"
-                  type="checkbox"
-                  checked={isPublic !== false}
-                  onChange={(e) => onIsPublicChange?.(e.target.checked)}
-                  disabled={submitting}
-                />
-                <label className="form-label" htmlFor="add-thing-public">
-                  Public (visible to everyone)
-                </label>
-              </div>
               {!ownerGroupsLoading && ownerGroups?.length > 0 && (
                 <>
                   <p className="add-thing-form-groups-label">Shared with groups:</p>
@@ -339,8 +314,7 @@ function MyThingsPanel({
                       <div className="thing-description">{thing.description}</div>
                     )}
                     <div className="thing-sharing-summary" aria-label="Sharing">
-                      {thing.is_public !== false ? 'public' : 'not public'}
-                      {', shared with '}
+                      Shared with{' '}
                       {ownerGroups.length === 0
                         ? '0 groups'
                         : `${sharedCountByThingId[thing.id] ?? 0}/${ownerGroups.length} groups`}
@@ -363,16 +337,6 @@ function MyThingsPanel({
             <h3 id="bulk-sharing-title">Edit sharing for {selectedCount} things</h3>
             <form onSubmit={handleBulkSharingSave}>
               {bulkError && <p className="form-error" role="alert">{bulkError}</p>}
-              <div className="form-checkbox-row">
-                <input
-                  id="bulk-share-public"
-                  type="checkbox"
-                  checked={bulkSharingPublic}
-                  onChange={(e) => setBulkSharingPublic(e.target.checked)}
-                  disabled={bulkSaving}
-                />
-                <label className="form-label" htmlFor="bulk-share-public">Public (visible to everyone)</label>
-              </div>
               {!ownerGroupsLoading && ownerGroups.length > 0 && (
                 <>
                   <p className="bulk-sharing-groups-label">Shared with groups:</p>

@@ -1,7 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../lib/supabaseClient';
-import Map from './Map';
-import { useUserLocationMarkers } from '../hooks/useUserLocationMarkers';
 import { useMyGroups } from '../hooks/useMyGroups';
 import './ThingsPanel.css';
 
@@ -48,8 +46,6 @@ function ThingsPanel({ user, things, loading, error, onSelectThing }) {
       return (thingGroupIds[thing.id] ?? []).includes(groupFilter);
     });
   }, [things, showMyThings, groupFilter, thingGroupIds, user?.id]);
-
-  const { markers } = useUserLocationMarkers(filteredThings);
 
   return (
     <div
@@ -127,14 +123,6 @@ function ThingsPanel({ user, things, loading, error, onSelectThing }) {
       {!loading && !error && things.length > 0 && filteredThings.length === 0 && (
         <p className="status">No things match the current filters.</p>
       )}
-
-      <section className="map-section" aria-label="Map of things">
-        <h2 className="map-section-title">Map</h2>
-        <p className="map-section-hint">People who share things appear at their profile location.</p>
-        <div className="map-wrapper">
-          <Map markers={markers} />
-        </div>
-      </section>
     </div>
   );
 }

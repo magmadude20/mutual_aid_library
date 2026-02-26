@@ -29,6 +29,14 @@
   margin-top: 1.5rem;
 }
 
+.group-detail-location {
+  margin-top: 1.5rem;
+}
+
+.group-detail-map {
+  margin-top: 0.5rem;
+}
+
 .group-invite-hint {
   margin: 0 0 0.5rem;
   font-size: 0.9rem;
@@ -130,6 +138,16 @@
 
 .group-edit-form .form-checkbox-row .form-label {
   margin: 0;
+}
+
+.group-edit-form .form-map-section {
+  margin-top: 1rem;
+}
+
+.group-edit-form .form-map-section .form-hint {
+  margin: 0.25rem 0 0;
+  font-size: 0.85rem;
+  color: #9ca3af;
 }
 
 .group-edit-actions {

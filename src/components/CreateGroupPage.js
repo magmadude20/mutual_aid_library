@@ -2,13 +2,19 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { nanoid } from 'nanoid';
 import { supabase } from '../lib/supabaseClient';
+import LocationPicker from './LocationPicker';
 import './CreateGroupPage.css';
+
+const DEFAULT_LAT = 40;
+const DEFAULT_LNG = -101;
 
 function CreateGroupPage({ user }) {
   const navigate = useNavigate();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [isPublic, setIsPublic] = useState(true);
+  const [latitude, setLatitude] = useState(null);
+  const [longitude, setLongitude] = useState(null);
   const [error, setError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -17,6 +23,10 @@ function CreateGroupPage({ user }) {
     const trimmedName = name.trim();
     if (!trimmedName) {
       setError('Name is required.');
+      return;
+    }
+    if (latitude == null || longitude == null || !Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+      setError('Location is required. Click the map to set the group location.');
       return;
     }
     setError(null);
@@ -31,6 +41,8 @@ function CreateGroupPage({ user }) {
           is_public: isPublic,
           invite_token: inviteToken,
           created_by: user.id,
+          latitude,
+          longitude,
         })
         .select('id')
         .single();
@@ -68,6 +80,24 @@ function CreateGroupPage({ user }) {
           disabled={submitting}
           autoComplete="off"
         />
+        <div className="form-map-section">
+          <label className="form-label">Location</label>
+          <p className="form-hint">Click the map to set the group location (required).</p>
+          <div className="location-picker-wrapper">
+            <LocationPicker
+              selectedPoint={
+                latitude != null && longitude != null
+                  ? { lat: latitude, lng: longitude }
+                  : undefined
+              }
+              onSelect={(lat, lng) => {
+                setLatitude(lat);
+                setLongitude(lng);
+                setError(null);
+              }}
+            />
+          </div>
+        </div>
         <label className="form-label" htmlFor="group-description">Description (optional)</label>
         <textarea
           id="group-description"

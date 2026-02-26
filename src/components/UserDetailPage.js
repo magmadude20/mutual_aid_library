@@ -3,13 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
 import { useUserProfile } from '../hooks/useUserProfile';
 import { useUserVisibleThings } from '../hooks/useUserVisibleThings';
-import Map from './Map';
-import LocationPicker from './LocationPicker';
 import MyThingsPanel from './MyThingsPanel';
 import './UserDetailPage.css';
-
-const DEFAULT_LAT = 45;
-const DEFAULT_LNG = -93;
 
 function UserDetailPage({
   user,
@@ -25,14 +20,12 @@ function UserDetailPage({
 }) {
   const { userId } = useParams();
   const navigate = useNavigate();
-  const { fullName, contactInfo, latitude, longitude, loading: profileLoading, error: profileError, refetch: refetchProfile } = useUserProfile(userId);
+  const { fullName, contactInfo, loading: profileLoading, error: profileError, refetch: refetchProfile } = useUserProfile(userId);
   const { things, loading: thingsLoading, error: thingsError } = useUserVisibleThings(userId);
 
   const [editingProfile, setEditingProfile] = useState(false);
   const [editFullName, setEditFullName] = useState('');
   const [editContactInfo, setEditContactInfo] = useState('');
-  const [editLatitude, setEditLatitude] = useState(DEFAULT_LAT);
-  const [editLongitude, setEditLongitude] = useState(DEFAULT_LNG);
   const [saveError, setSaveError] = useState(null);
   const [saveMessage, setSaveMessage] = useState('');
   const [saving, setSaving] = useState(false);
@@ -46,12 +39,10 @@ function UserDetailPage({
     if (editingProfile) {
       setEditFullName(fullName ?? '');
       setEditContactInfo(contactInfo ?? '');
-      setEditLatitude(latitude != null && Number.isFinite(latitude) ? latitude : DEFAULT_LAT);
-      setEditLongitude(longitude != null && Number.isFinite(longitude) ? longitude : DEFAULT_LNG);
       setSaveError(null);
       setSaveMessage('');
     }
-  }, [editingProfile, fullName, contactInfo, latitude, longitude]);
+  }, [editingProfile, fullName, contactInfo]);
 
   async function handleSaveProfile(e) {
     e.preventDefault();
@@ -69,8 +60,6 @@ function UserDetailPage({
         id: userId,
         full_name: nextFullName,
         contact_info: nextContactInfo,
-        latitude: editLatitude,
-        longitude: editLongitude,
       });
       if (upsertError) throw upsertError;
       setSaveMessage('Profile saved.');
@@ -103,11 +92,6 @@ function UserDetailPage({
     isSelf &&
     (((fullName ?? '').toString().trim() === '') ||
       ((contactInfo ?? '').toString().trim() === ''));
-
-  const locationMarker =
-    latitude != null && longitude != null
-      ? [{ userId, latitude, longitude, fullName: fullName || 'Unknown', things: things ?? [] }]
-      : [];
 
   if (profileLoading && !fullName && !profileError) {
     return (
@@ -190,19 +174,6 @@ function UserDetailPage({
               disabled={saving}
               required
             />
-            <div className="form-map-section">
-              <label className="form-label">Your location</label>
-              <p className="form-hint">Used to show you on the Thing library map. Click the map to set.</p>
-              <div className="location-picker-wrapper">
-                <LocationPicker
-                  selectedPoint={{ lat: editLatitude, lng: editLongitude }}
-                  onSelect={(lat, lng) => {
-                    setEditLatitude(lat);
-                    setEditLongitude(lng);
-                  }}
-                />
-              </div>
-            </div>
             <div className="user-detail-edit-actions">
               <button type="submit" className="submit-button" disabled={saving}>
                 {saving ? 'Saving…' : 'Save'}
@@ -229,15 +200,6 @@ function UserDetailPage({
           </p>
         )}
       </header>
-
-      {locationMarker.length > 0 && !editingProfile && (
-        <section className="user-detail-location" aria-label="Location">
-          <h3 className="map-section-title">Location</h3>
-          <div className="map-wrapper user-detail-map">
-            <Map markers={locationMarker} />
-          </div>
-        </section>
-      )}
 
       {isSelf && (
         <section className="user-detail-my-things-section" aria-label="My things">

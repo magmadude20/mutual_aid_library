@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabaseClient';
 import { useMyGroups } from '../hooks/useMyGroups';
 import { usePublicGroups } from '../hooks/usePublicGroups';
 import { useGroupCounts } from '../hooks/useGroupCounts';
+import Map from './Map';
 import './GroupsListPage.css';
 
 function GroupsListPage({ user }) {
@@ -62,6 +63,21 @@ function GroupsListPage({ user }) {
 
       <section className="groups-browse-section" aria-label="Browse public groups">
         <h3 className="groups-browse-title">Browse public groups</h3>
+        {publicGroups.some((g) => g.latitude != null && g.longitude != null && Number.isFinite(g.latitude) && Number.isFinite(g.longitude)) && (
+          <div className="groups-browse-map-wrapper">
+            <Map
+              markers={publicGroups
+                .filter((g) => g.latitude != null && g.longitude != null && Number.isFinite(g.latitude) && Number.isFinite(g.longitude))
+                .map((g) => ({
+                  groupId: g.id,
+                  latitude: g.latitude,
+                  longitude: g.longitude,
+                  fullName: g.name,
+                  href: `/groups/${g.id}`,
+                }))}
+            />
+          </div>
+        )}
         {joinError && <p className="form-error" role="alert">{joinError}</p>}
         {publicLoading && <p className="status">Loading public groups…</p>}
         {!publicLoading && publicError && <p className="status error">{publicError}</p>}

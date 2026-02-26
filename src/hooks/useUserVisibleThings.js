@@ -21,7 +21,7 @@ export function useUserVisibleThings(userId) {
       try {
         const { data, error: fetchError } = await supabase
           .from('items')
-          .select('id, name, description, user_id, is_public')
+          .select('id, name, description, user_id')
           .eq('user_id', userId)
           .order('name');
         if (!isMounted) return;

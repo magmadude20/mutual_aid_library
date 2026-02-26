@@ -87,3 +87,12 @@
   font-size: 1.1rem;
   font-weight: 600;
 }
+
+.groups-browse-map-wrapper {
+  height: 320px;
+  width: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #3a3f47;
+  margin-bottom: 1rem;
+}

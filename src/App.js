@@ -25,7 +25,6 @@ function App() {
   const navigate = useNavigate();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const [addFormIsPublic, setAddFormIsPublic] = useState(true);
   const [addFormSharingGroupIds, setAddFormSharingGroupIds] = useState([]);
   const [formError, setFormError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
@@ -47,9 +46,8 @@ function App() {
           user_id: user.id,
           name: trimmedName,
           description: description.trim() || null,
-          is_public: addFormIsPublic,
         })
-        .select('id, name, description, user_id, is_public')
+        .select('id, name, description, user_id')
         .single();
 
       if (insertError) throw insertError;
@@ -63,7 +61,6 @@ function App() {
       setMyThings((prev) => [data, ...prev]);
       setName('');
       setDescription('');
-      setAddFormIsPublic(true);
       setAddFormSharingGroupIds([]);
       setShowAddForm(false);
     } catch (err) {
@@ -159,17 +156,14 @@ function App() {
                 description,
                 formError,
                 submitting,
-                isPublic: addFormIsPublic,
                 sharingGroupIds: addFormSharingGroupIds,
                 onNameChange: setName,
                 onDescriptionChange: setDescription,
-                onIsPublicChange: setAddFormIsPublic,
                 onToggleSharingGroup: (groupId) =>
                   setAddFormSharingGroupIds((prev) =>
                     prev.includes(groupId) ? prev.filter((id) => id !== groupId) : [...prev, groupId]
                   ),
                 onCancelAdd: () => {
-                  setAddFormIsPublic(true);
                   setAddFormSharingGroupIds([]);
                   setShowAddForm(false);
                 },

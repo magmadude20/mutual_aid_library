@@ -14,7 +14,7 @@ export function usePublicGroups(userId) {
         setError(null);
         const { data, error: fetchError } = await supabase
           .from('groups')
-          .select('id, name, description, invite_token')
+          .select('id, name, description, invite_token, latitude, longitude')
           .eq('is_public', true)
           .order('name');
         if (fetchError) throw fetchError;

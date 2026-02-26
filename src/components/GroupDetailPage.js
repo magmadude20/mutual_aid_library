@@ -3,7 +3,12 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
 import { useGroupMembers } from '../hooks/useGroupMembers';
 import { useMyThings } from '../hooks/useMyThings';
+import Map from './Map';
+import LocationPicker from './LocationPicker';
 import './GroupDetailPage.css';
+
+const DEFAULT_LAT = 36.16473;
+const DEFAULT_LNG = -86.774204;
 
 function GroupDetailPage({ user }) {
   const { groupId } = useParams();
@@ -16,6 +21,8 @@ function GroupDetailPage({ user }) {
   const [editName, setEditName] = useState('');
   const [editDescription, setEditDescription] = useState('');
   const [editIsPublic, setEditIsPublic] = useState(true);
+  const [editLatitude, setEditLatitude] = useState(DEFAULT_LAT);
+  const [editLongitude, setEditLongitude] = useState(DEFAULT_LNG);
   const [editError, setEditError] = useState(null);
   const [editSubmitting, setEditSubmitting] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
@@ -35,7 +42,7 @@ function GroupDetailPage({ user }) {
       try {
         const { data: g, error: gError } = await supabase
           .from('groups')
-          .select('id, name, description, is_public, invite_token')
+          .select('id, name, description, is_public, invite_token, latitude, longitude')
           .eq('id', groupId)
           .maybeSingle();
         if (!isMounted) return;
@@ -156,6 +163,12 @@ function GroupDetailPage({ user }) {
     setEditName(group.name ?? '');
     setEditDescription(group.description ?? '');
     setEditIsPublic(group.is_public !== false);
+    setEditLatitude(
+      group.latitude != null && Number.isFinite(group.latitude) ? group.latitude : DEFAULT_LAT
+    );
+    setEditLongitude(
+      group.longitude != null && Number.isFinite(group.longitude) ? group.longitude : DEFAULT_LNG
+    );
     setEditError(null);
     setEditingGroup(true);
   }
@@ -181,9 +194,11 @@ function GroupDetailPage({ user }) {
           name: trimmedName,
           description: editDescription.trim() || null,
           is_public: editIsPublic,
+          latitude: editLatitude,
+          longitude: editLongitude,
         })
         .eq('id', groupId)
-        .select('id, name, description, is_public, invite_token')
+        .select('id, name, description, is_public, invite_token, latitude, longitude')
         .single();
       if (updateError) throw updateError;
       setGroup(data);
@@ -257,6 +272,19 @@ function GroupDetailPage({ user }) {
               />
               <label className="form-label" htmlFor="group-edit-is-public">Public (show in Browse public groups)</label>
             </div>
+            <div className="form-map-section">
+              <label className="form-label">Group location</label>
+              <p className="form-hint">Optional. Click the map to set a location for the group.</p>
+              <div className="location-picker-wrapper">
+                <LocationPicker
+                  selectedPoint={{ lat: editLatitude, lng: editLongitude }}
+                  onSelect={(lat, lng) => {
+                    setEditLatitude(lat);
+                    setEditLongitude(lng);
+                  }}
+                />
+              </div>
+            </div>
             <div className="group-edit-actions">
               <button type="button" className="header-button" onClick={cancelEditing} disabled={editSubmitting}>
                 Cancel
@@ -287,6 +315,25 @@ function GroupDetailPage({ user }) {
         )}
       </div>
       {error && <p className="form-error" role="alert">{error}</p>}
+
+      {group.latitude != null && group.longitude != null && Number.isFinite(group.latitude) && Number.isFinite(group.longitude) && !editingGroup && (
+        <section className="group-detail-location" aria-label="Location">
+          <h3 className="map-section-title">Location</h3>
+          <div className="map-wrapper group-detail-map">
+            <Map
+              markers={[
+                {
+                  groupId: group.id,
+                  latitude: group.latitude,
+                  longitude: group.longitude,
+                  fullName: group.name,
+                  href: `/groups/${group.id}`,
+                },
+              ]}
+            />
+          </div>
+        </section>
+      )}
 
       <section className="group-detail-invite" aria-label="Invite link">
         <h3 className="map-section-title">Invite link</h3>

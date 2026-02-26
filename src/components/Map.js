@@ -33,7 +33,7 @@ function FitBounds({ markers }) {
   return null;
 }
 
-/** markers = [{ userId, latitude, longitude, fullName, things }] */
+/** markers = [{ userId?, groupId?, latitude, longitude, fullName, things?, href? }] - userId for user popup link, groupId+href for group */
 function Map({ markers = [] }) {
   return (
     <MapContainer
@@ -48,8 +48,8 @@ function Map({ markers = [] }) {
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
       <FitBounds markers={markers} />
-      {markers.map((marker) => (
-        <Marker key={marker.userId} position={[marker.latitude, marker.longitude]}>
+      {markers.map((marker, i) => (
+        <Marker key={marker.userId ?? marker.groupId ?? i} position={[marker.latitude, marker.longitude]}>
           <Popup>
             {marker.fullName && <strong>{marker.fullName}</strong>}
             {marker.things?.length > 0 && (
@@ -61,9 +61,11 @@ function Map({ markers = [] }) {
               </>
             )}
             <br />
-            <Link to={`/user/${marker.userId}`} className="map-popup-link">
-              View all things
-            </Link>
+            {marker.href ? (
+              <Link to={marker.href} className="map-popup-link">View group</Link>
+            ) : marker.userId ? (
+              <Link to={`/user/${marker.userId}`} className="map-popup-link">View all things</Link>
+            ) : null}
           </Popup>
         </Marker>
       ))}

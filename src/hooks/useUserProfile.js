@@ -15,7 +15,7 @@ export function useUserProfile(userId) {
       try {
         const { data, error: fetchError } = await supabase
           .from('profiles')
-          .select('full_name, contact_info, latitude, longitude')
+          .select('full_name, contact_info')
           .eq('id', userId)
           .maybeSingle();
         if (!isMounted) return;
@@ -34,17 +34,9 @@ export function useUserProfile(userId) {
     refetch();
   }, [refetch]);
 
-  const hasLocation =
-    profile?.latitude != null &&
-    profile?.longitude != null &&
-    Number.isFinite(profile.latitude) &&
-    Number.isFinite(profile.longitude);
-
   return {
     fullName: profile?.full_name?.trim() || null,
     contactInfo: profile?.contact_info ?? null,
-    latitude: hasLocation ? profile.latitude : null,
-    longitude: hasLocation ? profile.longitude : null,
     loading,
     error,
     refetch,

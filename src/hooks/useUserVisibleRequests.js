@@ -1,15 +1,15 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
 
-/** Items owned by userId that are visible to the current user (RLS applies). */
-export function useUserVisibleThings(userId) {
-  const [things, setThings] = useState([]);
+/** Request items owned by userId that are visible to the current user (RLS applies). */
+export function useUserVisibleRequests(userId) {
+  const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
     if (!userId) {
-      setThings([]);
+      setRequests([]);
       setLoading(false);
       setError(null);
       return;
@@ -23,14 +23,14 @@ export function useUserVisibleThings(userId) {
           .from('items')
           .select('id, name, description, user_id, type')
           .eq('user_id', userId)
-          .eq('type', 'thing')
+          .eq('type', 'request')
           .order('name');
         if (!isMounted) return;
         if (fetchError) throw fetchError;
-        setThings(data ?? []);
+        setRequests(data ?? []);
       } catch (err) {
         if (!isMounted) return;
-        setError(err.message || 'Failed to load things.');
+        setError(err.message || 'Failed to load requests.');
       } finally {
         if (isMounted) setLoading(false);
       }
@@ -38,5 +38,5 @@ export function useUserVisibleThings(userId) {
     return () => { isMounted = false; };
   }, [userId]);
 
-  return { things, loading, error };
+  return { requests, loading, error };
 }

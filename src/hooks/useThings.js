@@ -15,7 +15,8 @@ export function useThings(session) {
         setError(null);
         const { data, error: fetchError } = await supabase
           .from('items')
-          .select('id, name, description, user_id');
+          .select('id, name, description, user_id, type')
+          .eq('type', 'thing');
 
         if (fetchError) throw fetchError;
         if (!isMounted) return;

@@ -4,11 +4,14 @@ import { supabase } from './lib/supabaseClient';
 import { useAuth } from './hooks/useAuth';
 import { useThings } from './hooks/useThings';
 import { useMyThings } from './hooks/useMyThings';
+import { useRequests } from './hooks/useRequests';
+import { useMyRequests } from './hooks/useMyRequests';
 import { useOwnerGroups } from './hooks/useOwnerGroups';
 import Login from './components/Login';
 import Layout from './components/Layout';
 import ThingDetailRoute from './components/ThingDetailRoute';
 import ThingsPanel from './components/ThingsPanel';
+import RequestsPanel from './components/RequestsPanel';
 import JoinGroupPage from './components/JoinGroupPage';
 import GroupsListPage from './components/GroupsListPage';
 import CreateGroupPage from './components/CreateGroupPage';
@@ -20,14 +23,22 @@ function App() {
   const { session, user, loading: authLoading, logout } = useAuth();
   const { things, setThings, loading: thingsLoading, error: thingsError } = useThings(session);
   const { myThings, setMyThings, loading: myThingsLoading, error: myThingsError } = useMyThings(user?.id);
+  const { requests, setRequests, loading: requestsLoading, error: requestsError } = useRequests(session);
+  const { myRequests, setMyRequests, loading: myRequestsLoading, error: myRequestsError } = useMyRequests(user?.id);
 
   const [showAddForm, setShowAddForm] = useState(false);
+  const [showAddRequestForm, setShowAddRequestForm] = useState(false);
   const navigate = useNavigate();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [addFormSharingGroupIds, setAddFormSharingGroupIds] = useState([]);
   const [formError, setFormError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  const [requestName, setRequestName] = useState('');
+  const [requestDescription, setRequestDescription] = useState('');
+  const [addRequestFormSharingGroupIds, setAddRequestFormSharingGroupIds] = useState([]);
+  const [requestFormError, setRequestFormError] = useState(null);
+  const [requestSubmitting, setRequestSubmitting] = useState(false);
   const { groups: ownerGroups } = useOwnerGroups(user?.id);
 
   async function handleAddSubmit(e) {
@@ -46,8 +57,9 @@ function App() {
           user_id: user.id,
           name: trimmedName,
           description: description.trim() || null,
+          type: 'thing',
         })
-        .select('id, name, description, user_id')
+        .select('id, name, description, user_id, type')
         .single();
 
       if (insertError) throw insertError;
@@ -67,6 +79,47 @@ function App() {
       setFormError(err.message || 'Failed to add thing.');
     } finally {
       setSubmitting(false);
+    }
+  }
+
+  async function handleAddRequestSubmit(e) {
+    e.preventDefault();
+    const trimmedName = requestName.trim();
+    if (!trimmedName) {
+      setRequestFormError('Name is required.');
+      return;
+    }
+    setRequestFormError(null);
+    setRequestSubmitting(true);
+    try {
+      const { data, error: insertError } = await supabase
+        .from('items')
+        .insert({
+          user_id: user.id,
+          name: trimmedName,
+          description: requestDescription.trim() || null,
+          type: 'request',
+        })
+        .select('id, name, description, user_id, type')
+        .single();
+
+      if (insertError) throw insertError;
+      if (addRequestFormSharingGroupIds.length > 0) {
+        const { error: shareError } = await supabase.from('things_to_groups').insert(
+          addRequestFormSharingGroupIds.map((group_id) => ({ thing_id: data.id, group_id }))
+        );
+        if (shareError) throw shareError;
+      }
+      setRequests((prev) => [data, ...prev]);
+      setMyRequests((prev) => [data, ...prev]);
+      setRequestName('');
+      setRequestDescription('');
+      setAddRequestFormSharingGroupIds([]);
+      setShowAddRequestForm(false);
+    } catch (err) {
+      setRequestFormError(err.message || 'Failed to add request.');
+    } finally {
+      setRequestSubmitting(false);
     }
   }
 
@@ -90,6 +143,10 @@ function App() {
 
   const selectThing = (thing) => {
     navigate(`/thing/${thing.id}`, { state: { thing } });
+  };
+
+  const selectRequest = (request) => {
+    navigate(`/thing/${request.id}`, { state: { thing: request } });
   };
 
   const handleLogout = async () => {
@@ -116,6 +173,18 @@ function App() {
           }
         />
         <Route
+          path="requests"
+          element={
+            <RequestsPanel
+              user={user}
+              requests={requests}
+              loading={requestsLoading}
+              error={requestsError}
+              onSelectRequest={selectRequest}
+            />
+          }
+        />
+        <Route
           path="my-things"
           element={<Navigate to={user?.id ? `/user/${user.id}` : '/'} replace />}
         />
@@ -126,6 +195,8 @@ function App() {
               user={user}
               setThings={setThings}
               setMyThings={setMyThings}
+              setRequests={setRequests}
+              setMyRequests={setMyRequests}
             />
           }
         />
@@ -146,6 +217,10 @@ function App() {
               setMyThings={setMyThings}
               myThingsLoading={myThingsLoading}
               myThingsError={myThingsError}
+              myRequests={myRequests}
+              setMyRequests={setMyRequests}
+              myRequestsLoading={myRequestsLoading}
+              myRequestsError={myRequestsError}
               showAddForm={showAddForm}
               onShowAddForm={(show) => {
                 if (show) setAddFormSharingGroupIds(ownerGroups?.map((g) => g.id) ?? []);
@@ -169,7 +244,31 @@ function App() {
                 },
               }}
               onAddSubmit={handleAddSubmit}
+              showAddRequestForm={showAddRequestForm}
+              onShowAddRequestForm={(show) => {
+                if (show) setAddRequestFormSharingGroupIds(ownerGroups?.map((g) => g.id) ?? []);
+                setShowAddRequestForm(show);
+              }}
+              addRequestForm={{
+                name: requestName,
+                description: requestDescription,
+                formError: requestFormError,
+                submitting: requestSubmitting,
+                sharingGroupIds: addRequestFormSharingGroupIds,
+                onNameChange: setRequestName,
+                onDescriptionChange: setRequestDescription,
+                onToggleSharingGroup: (groupId) =>
+                  setAddRequestFormSharingGroupIds((prev) =>
+                    prev.includes(groupId) ? prev.filter((id) => id !== groupId) : [...prev, groupId]
+                  ),
+                onCancelAdd: () => {
+                  setAddRequestFormSharingGroupIds([]);
+                  setShowAddRequestForm(false);
+                },
+              }}
+              onAddRequestSubmit={handleAddRequestSubmit}
               onSelectThing={selectThing}
+              onSelectRequest={selectRequest}
             />
           }
         />

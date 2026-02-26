@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
 import { useGroupMembers } from '../hooks/useGroupMembers';
 import { useMyThings } from '../hooks/useMyThings';
+import { useMyRequests } from '../hooks/useMyRequests';
 import Map from './Map';
 import LocationPicker from './LocationPicker';
 import './GroupDetailPage.css';
@@ -34,6 +35,7 @@ function GroupDetailPage({ user }) {
   const [thingsError, setThingsError] = useState(null);
   const { members, loading: membersLoading, error: membersError } = useGroupMembers(groupId);
   const { myThings, loading: myThingsLoading, error: myThingsError } = useMyThings(user?.id);
+  const { myRequests, loading: myRequestsLoading, error: myRequestsError } = useMyRequests(user?.id);
 
   useEffect(() => {
     if (!groupId || !user?.id) return;
@@ -134,6 +136,26 @@ function GroupDetailPage({ user }) {
     } catch (err) {
       setSharedThingIds(previousIds);
       setThingsError(err.message || 'Failed to share all.');
+    } finally {
+      setShareAllBusy(false);
+    }
+  }
+
+  async function shareAllRequestsWithGroup() {
+    const toAdd = myRequests.filter((r) => !sharedThingIds.includes(r.id));
+    if (toAdd.length === 0) return;
+    setThingsError(null);
+    setShareAllBusy(true);
+    const previousIds = sharedThingIds;
+    setSharedThingIds((prev) => [...prev, ...toAdd.map((r) => r.id)]);
+    try {
+      const { error: insErr } = await supabase.from('things_to_groups').insert(
+        toAdd.map((r) => ({ thing_id: r.id, group_id: groupId }))
+      );
+      if (insErr) throw insErr;
+    } catch (err) {
+      setSharedThingIds(previousIds);
+      setThingsError(err.message || 'Failed to share all requests.');
     } finally {
       setShareAllBusy(false);
     }
@@ -299,7 +321,7 @@ function GroupDetailPage({ user }) {
             <h2 className="group-detail-name">{group.name}</h2>
             {group.description && <p className="group-detail-description">{group.description}</p>}
             <p className="group-detail-summary">
-              {membersLoading ? '…' : members.length} users sharing {sharedThingsLoading ? '…' : sharedThingIds.length} things
+              {membersLoading ? '…' : members.length} users sharing {sharedThingsLoading ? '…' : sharedThingIds.length} items
             </p>
             {isAdmin && (
               <div className="group-detail-admin-buttons">
@@ -419,6 +441,58 @@ function GroupDetailPage({ user }) {
             )}
             {!myThingsLoading && myThings.length === 0 && (
               <p className="status">You have no things yet. Add items from the map or My things.</p>
+            )}
+          </>
+        )}
+      </section>
+
+      <section className="group-detail-your-things" aria-label="Your requests in this group">
+        <h3 className="map-section-title">Your requests</h3>
+        <p className="group-things-hint">Share your requests with this group so members can see them.</p>
+        {myRequestsLoading && <p className="status">Loading your requests…</p>}
+        {myRequestsError && <p className="status error">{myRequestsError}</p>}
+        {thingsError && <p className="status error" role="alert">{thingsError}</p>}
+        {!myRequestsLoading && !myRequestsError && (
+          <>
+            {myRequests.length > 0 && (
+              <div className="group-detail-share-all-row">
+                <button
+                  type="button"
+                  className="header-button"
+                  onClick={shareAllRequestsWithGroup}
+                  disabled={
+                    shareAllBusy ||
+                    sharedThingsLoading ||
+                    myRequests.every((r) => sharedThingIds.includes(r.id))
+                  }
+                >
+                  {shareAllBusy ? 'Sharing…' : 'Share all requests'}
+                </button>
+              </div>
+            )}
+            {sharedThingsLoading && myRequests.length > 0 && <p className="status">Loading sharing…</p>}
+            {!sharedThingsLoading && (
+              <ul className="group-detail-things-list">
+                {myRequests.map((request) => (
+                  <li key={request.id} className="group-detail-thing-row">
+                    <input
+                      type="checkbox"
+                      id={`group-request-${request.id}`}
+                      className="group-detail-thing-checkbox"
+                      checked={sharedThingIds.includes(request.id)}
+                      onChange={() => toggleThingShared(request.id, sharedThingIds.includes(request.id))}
+                      disabled={sharedThingsLoading}
+                      aria-label={`Share request "${request.name ?? 'Untitled'}" with group`}
+                    />
+                    <label htmlFor={`group-request-${request.id}`} className="group-detail-thing-label">
+                      {request.name || 'Untitled'}
+                    </label>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {!myRequestsLoading && myRequests.length === 0 && (
+              <p className="status">You have no requests yet.</p>
             )}
           </>
         )}

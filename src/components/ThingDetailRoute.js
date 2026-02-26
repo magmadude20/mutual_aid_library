@@ -3,7 +3,7 @@ import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
 import ThingDetailPage from './ThingDetailPage';
 
-function ThingDetailRoute({ user, setThings, setMyThings }) {
+function ThingDetailRoute({ user, setThings, setMyThings, setRequests, setMyRequests }) {
   const { id } = useParams();
   const { state } = useLocation();
   const navigate = useNavigate();
@@ -18,7 +18,7 @@ function ThingDetailRoute({ user, setThings, setMyThings }) {
       try {
         const { data, error } = await supabase
           .from('items')
-          .select('id, name, description, user_id')
+          .select('id, name, description, user_id, type')
           .eq('id', id)
           .maybeSingle();
         if (!isMounted) return;
@@ -50,15 +50,25 @@ function ThingDetailRoute({ user, setThings, setMyThings }) {
   }
 
   function handleThingUpdated(updated) {
-    setThings((prev) => prev.map((t) => (t.id === updated.id ? updated : t)));
-    setMyThings((prev) => prev.map((t) => (t.id === updated.id ? updated : t)));
+    if (thing?.type === 'request') {
+      setRequests((prev) => prev.map((t) => (t.id === updated.id ? updated : t)));
+      setMyRequests((prev) => prev.map((t) => (t.id === updated.id ? updated : t)));
+    } else {
+      setThings((prev) => prev.map((t) => (t.id === updated.id ? updated : t)));
+      setMyThings((prev) => prev.map((t) => (t.id === updated.id ? updated : t)));
+    }
     setThing(updated);
     navigate(`/thing/${updated.id}`, { replace: true, state: { thing: updated } });
   }
 
   function handleThingDeleted() {
-    setThings((prev) => prev.filter((t) => t.id !== thing.id));
-    setMyThings((prev) => prev.filter((t) => t.id !== thing.id));
+    if (thing?.type === 'request') {
+      setRequests((prev) => prev.filter((t) => t.id !== thing.id));
+      setMyRequests((prev) => prev.filter((t) => t.id !== thing.id));
+    } else {
+      setThings((prev) => prev.filter((t) => t.id !== thing.id));
+      setMyThings((prev) => prev.filter((t) => t.id !== thing.id));
+    }
     navigate('/');
   }
 

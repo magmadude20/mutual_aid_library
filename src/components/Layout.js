@@ -27,7 +27,17 @@ function Layout({ user, logout }) {
               id="things-tab"
               className={({ isActive }) => `tab ${isActive ? 'tab-active' : ''}`}
             >
-              Thing library
+              Things
+            </NavLink>
+            <NavLink
+              to="/requests"
+              end
+              role="tab"
+              aria-controls="requests-panel"
+              id="requests-tab"
+              className={({ isActive }) => `tab ${isActive ? 'tab-active' : ''}`}
+            >
+              Requests
             </NavLink>
             <NavLink
               to="/groups"

@@ -9,6 +9,16 @@
   border-radius: 8px;
 }
 
+.things-panel-section-title {
+  margin: 0 0 0.5rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.things-panel-requests-filters {
+  margin-top: 1.5rem;
+}
+
 .things-panel-filter-row {
   display: flex;
   align-items: center;

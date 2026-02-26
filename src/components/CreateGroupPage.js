@@ -5,9 +5,6 @@ import { supabase } from '../lib/supabaseClient';
 import LocationPicker from './LocationPicker';
 import './CreateGroupPage.css';
 
-const DEFAULT_LAT = 40;
-const DEFAULT_LNG = -101;
-
 function CreateGroupPage({ user }) {
   const navigate = useNavigate();
   const [name, setName] = useState('');

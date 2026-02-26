@@ -109,7 +109,7 @@ function ThingDetailPage({ thing, user, onBack, onThingUpdated, onThingDeleted }
           description: editDescription.trim() || null,
         })
         .eq('id', thing.id)
-        .select('id, name, description, user_id')
+        .select('id, name, description, user_id, type')
         .single();
 
       if (updateError) throw updateError;
@@ -175,8 +175,8 @@ function ThingDetailPage({ thing, user, onBack, onThingUpdated, onThingDeleted }
           </div>
         )}
       </div>
-      <h3 className="map-section-title">Thing</h3>
-      <article className="thing-detail" aria-label={`Thing: ${thing.name}`}>
+      <h3 className="map-section-title">{thing.type === 'request' ? 'Request' : 'Thing'}</h3>
+      <article className="thing-detail" aria-label={`${thing.type === 'request' ? 'Request' : 'Thing'}: ${thing.name}`}>
         {editingThing ? (
           <form onSubmit={handleEditSave} className="thing-detail-edit-form">
             {editError && (
@@ -193,7 +193,7 @@ function ThingDetailPage({ thing, user, onBack, onThingUpdated, onThingDeleted }
               className="form-input"
               value={editName}
               onChange={(e) => setEditName(e.target.value)}
-              placeholder="Thing name"
+              placeholder={thing.type === 'request' ? 'Request name' : 'Thing name'}
               required
               disabled={editSubmitting}
               autoComplete="off"
@@ -288,7 +288,7 @@ function ThingDetailPage({ thing, user, onBack, onThingUpdated, onThingDeleted }
         >
           <div className="modal-card">
             <h3 id="delete-modal-title" className="modal-title">
-              Delete this thing?
+              Delete this {thing.type === 'request' ? 'request' : 'thing'}?
             </h3>
             <p className="modal-text">
               This cannot be undone.

@@ -62,7 +62,7 @@ function ThingsPanel({ user, things, loading, error, onSelectThing }) {
       )}
 
       {!loading && !error && things.length > 0 && (
-        <div className="things-panel-filters" role="group" aria-label="Filter library">
+        <div className="things-panel-filters" role="group" aria-label="Filter things">
           <div className="things-panel-filter-row">
             <label className="things-panel-filter-checkbox">
               <input
@@ -98,12 +98,12 @@ function ThingsPanel({ user, things, loading, error, onSelectThing }) {
 
       {!loading && !error && things.length === 0 && (
         <p className="status">
-          No things returned. If you have rows in the table, check{' '}
+          No things yet. If you have rows in the table, check{' '}
           <strong>Row Level Security (RLS)</strong> in Supabase for authenticated users.
         </p>
       )}
       {!loading && !error && things.length > 0 && (
-        <ul className="things-list" aria-label="Inventory things">
+        <ul className="things-list" aria-label="Things">
           {filteredThings.map((thing) => (
             <li key={thing.id}>
               <button

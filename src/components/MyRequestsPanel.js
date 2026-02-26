@@ -3,18 +3,18 @@ import { useOwnerGroups } from '../hooks/useOwnerGroups';
 import { supabase } from '../lib/supabaseClient';
 import './MyThingsPanel.css';
 
-function MyThingsPanel({
+function MyRequestsPanel({
   user,
-  myThings,
-  setMyThings,
-  myThingsLoading,
-  myThingsError,
+  myRequests,
+  setMyRequests,
+  myRequestsLoading,
+  myRequestsError,
   showAddForm,
   onShowAddForm,
   addForm,
   onAddSubmit,
-  onSelectThing,
-  canAddThings = true,
+  onSelectRequest,
+  canAddRequests = true,
   showTitle = true,
 }) {
   const {
@@ -30,46 +30,46 @@ function MyThingsPanel({
   } = addForm;
 
   const [selectedIds, setSelectedIds] = useState([]);
-  const [bulkModal, setBulkModal] = useState(null); // 'sharing' | 'delete'
+  const [bulkModal, setBulkModal] = useState(null);
   const [bulkSharingGroupIds, setBulkSharingGroupIds] = useState([]);
   const [bulkSaving, setBulkSaving] = useState(false);
   const [bulkError, setBulkError] = useState(null);
   const [bulkDeleteSubmitting, setBulkDeleteSubmitting] = useState(false);
-  const [sharedCountByThingId, setSharedCountByThingId] = useState({});
+  const [sharedCountByRequestId, setSharedCountByRequestId] = useState({});
 
   const { groups: ownerGroups, loading: ownerGroupsLoading } = useOwnerGroups(user?.id);
 
   useEffect(() => {
-    if (!myThings?.length) {
-      setSharedCountByThingId({});
+    if (!myRequests?.length) {
+      setSharedCountByRequestId({});
       return;
     }
-    const thingIds = myThings.map((t) => t.id);
+    const requestIds = myRequests.map((r) => r.id);
     let isMounted = true;
     (async () => {
       try {
         const { data, error: fetchError } = await supabase
           .from('things_to_groups')
           .select('thing_id')
-          .in('thing_id', thingIds);
+          .in('thing_id', requestIds);
         if (fetchError) throw fetchError;
         if (!isMounted) return;
         const countBy = (data ?? []).reduce((acc, row) => {
           acc[row.thing_id] = (acc[row.thing_id] ?? 0) + 1;
           return acc;
         }, {});
-        setSharedCountByThingId(countBy);
+        setSharedCountByRequestId(countBy);
       } catch {
-        if (isMounted) setSharedCountByThingId({});
+        if (isMounted) setSharedCountByRequestId({});
       }
     })();
     return () => { isMounted = false; };
-  }, [myThings]);
+  }, [myRequests]);
 
-  function toggleSelected(thingId, e) {
+  function toggleSelected(requestId, e) {
     e.stopPropagation();
     setSelectedIds((prev) =>
-      prev.includes(thingId) ? prev.filter((id) => id !== thingId) : [...prev, thingId]
+      prev.includes(requestId) ? prev.filter((id) => id !== requestId) : [...prev, requestId]
     );
   }
 
@@ -80,8 +80,8 @@ function MyThingsPanel({
   }
 
   function selectAll() {
-    if (myThings.length === 0) return;
-    setSelectedIds(myThings.map((t) => t.id));
+    if (myRequests.length === 0) return;
+    setSelectedIds(myRequests.map((r) => r.id));
   }
 
   function openBulkAction(action) {
@@ -94,15 +94,15 @@ function MyThingsPanel({
     setBulkSaving(true);
     setBulkError(null);
     try {
-      for (const thingId of selectedIds) {
-        await supabase.from('things_to_groups').delete().eq('thing_id', thingId);
+      for (const requestId of selectedIds) {
+        await supabase.from('things_to_groups').delete().eq('thing_id', requestId);
         if (bulkSharingGroupIds.length > 0) {
           await supabase
             .from('things_to_groups')
-            .insert(bulkSharingGroupIds.map((group_id) => ({ thing_id: thingId, group_id })));
+            .insert(bulkSharingGroupIds.map((group_id) => ({ thing_id: requestId, group_id })));
         }
       }
-      setSharedCountByThingId((prev) => {
+      setSharedCountByRequestId((prev) => {
         const next = { ...prev };
         selectedIds.forEach((id) => {
           next[id] = bulkSharingGroupIds.length;
@@ -127,10 +127,10 @@ function MyThingsPanel({
     setBulkError(null);
     setBulkDeleteSubmitting(true);
     try {
-      for (const thingId of selectedIds) {
-        await supabase.from('items').delete().eq('id', thingId);
+      for (const requestId of selectedIds) {
+        await supabase.from('items').delete().eq('id', requestId);
       }
-      setMyThings((prev) => prev.filter((t) => !selectedIds.includes(t.id)));
+      setMyRequests((prev) => prev.filter((r) => !selectedIds.includes(r.id)));
       setBulkModal(null);
       setSelectedIds([]);
     } catch (err) {
@@ -144,28 +144,28 @@ function MyThingsPanel({
 
   return (
     <div
-      id="mythings-panel"
+      id="myrequests-panel"
       role="tabpanel"
-      aria-labelledby="mythings-tab"
+      aria-labelledby="myrequests-tab"
       className="tab-panel"
     >
       <div className="my-things-header">
-        {showTitle && <h2 className="tab-panel-title">My things</h2>}
+        {showTitle && <h2 className="tab-panel-title">My requests</h2>}
         <button
           type="button"
           className="header-button my-things-add-button"
           onClick={() => onShowAddForm(!showAddForm)}
-          disabled={submitting || !canAddThings}
+          disabled={submitting || !canAddRequests}
         >
-          {showAddForm ? 'Cancel' : '+ Add new thing'}
+          {showAddForm ? 'Cancel' : '+ Add new request'}
         </button>
-        {!myThingsLoading && !myThingsError && myThings.length > 0 && (
+        {!myRequestsLoading && !myRequestsError && myRequests.length > 0 && (
           <div className="my-things-header-bulk-buttons">
             <button
               type="button"
               className="header-button"
               onClick={selectAll}
-              disabled={myThings.every((t) => selectedIds.includes(t.id))}
+              disabled={myRequests.every((r) => selectedIds.includes(r.id))}
               aria-label="Select all"
             >
               Select all
@@ -178,45 +178,45 @@ function MyThingsPanel({
           </div>
         )}
       </div>
-      {!canAddThings && (
+      {!canAddRequests && (
         <p className="my-things-profile-warning" role="alert">
-          You need to add your name and contact info before adding any things.
+          You need to add your name and contact info before adding any requests.
         </p>
       )}
-      {myThingsLoading && <p className="status">Loading your things…</p>}
-      {myThingsError && (
+      {myRequestsLoading && <p className="status">Loading your requests…</p>}
+      {myRequestsError && (
         <p className="status error" role="alert">
-          {myThingsError}
+          {myRequestsError}
         </p>
       )}
-      {showAddForm && canAddThings && (
+      {showAddForm && canAddRequests && (
         <div className="my-things-add-form-wrapper">
-          <form className="add-thing-form" onSubmit={onAddSubmit} aria-label="Add thing">
-            <h2 className="form-title">Add thing</h2>
+          <form className="add-thing-form" onSubmit={onAddSubmit} aria-label="Add request">
+            <h2 className="form-title">Add request</h2>
             {formError && (
               <p className="form-error" role="alert">
                 {formError}
               </p>
             )}
-            <label className="form-label" htmlFor="thing-name">
+            <label className="form-label" htmlFor="request-name">
               Name
             </label>
             <input
-              id="thing-name"
+              id="request-name"
               type="text"
               className="form-input"
               value={name}
               onChange={(e) => onNameChange(e.target.value)}
-              placeholder="Thing name"
+              placeholder="What are you looking for?"
               required
               disabled={submitting}
               autoComplete="off"
             />
-            <label className="form-label" htmlFor="thing-description">
+            <label className="form-label" htmlFor="request-description">
               Description (optional)
             </label>
             <textarea
-              id="thing-description"
+              id="request-description"
               className="form-input form-textarea"
               value={description}
               onChange={(e) => onDescriptionChange(e.target.value)}
@@ -232,13 +232,13 @@ function MyThingsPanel({
                   {ownerGroups.map((g) => (
                     <div key={g.id} className="form-checkbox-row">
                       <input
-                        id={`add-thing-group-${g.id}`}
+                        id={`add-request-group-${g.id}`}
                         type="checkbox"
                         checked={sharingGroupIds?.includes(g.id)}
                         onChange={() => onToggleSharingGroup?.(g.id)}
                         disabled={submitting}
                       />
-                      <label className="form-label" htmlFor={`add-thing-group-${g.id}`}>
+                      <label className="form-label" htmlFor={`add-request-group-${g.id}`}>
                         {g.name}
                       </label>
                     </div>
@@ -248,7 +248,7 @@ function MyThingsPanel({
             </div>
             <div className="add-thing-form-actions">
               <button type="submit" className="submit-button" disabled={submitting}>
-                {submitting ? 'Adding…' : 'Add thing'}
+                {submitting ? 'Adding…' : 'Add request'}
               </button>
               <button
                 type="button"
@@ -262,7 +262,7 @@ function MyThingsPanel({
           </form>
         </div>
       )}
-      {!myThingsLoading && !myThingsError && myThings.length > 0 && (
+      {!myRequestsLoading && !myRequestsError && myRequests.length > 0 && (
         <>
           {selectedCount > 0 && (
             <div className="my-things-bulk-toolbar">
@@ -287,38 +287,38 @@ function MyThingsPanel({
               </div>
             </div>
           )}
-          <ul className="things-list" aria-label="My things">
-            {myThings.map((thing) => (
-              <li key={thing.id} className="thing-list-row">
+          <ul className="things-list" aria-label="My requests">
+            {myRequests.map((request) => (
+              <li key={request.id} className="thing-list-row">
                 <input
                   type="checkbox"
                   className="thing-select-checkbox"
-                  checked={selectedIds.includes(thing.id)}
-                  onChange={(e) => toggleSelected(thing.id, e)}
-                  aria-label={`Select ${thing.name}`}
+                  checked={selectedIds.includes(request.id)}
+                  onChange={(e) => toggleSelected(request.id, e)}
+                  aria-label={`Select ${request.name}`}
                 />
                 <div
                   className="thing-card thing-card-clickable"
                   role="button"
                   tabIndex={0}
-                  onClick={() => onSelectThing(thing)}
+                  onClick={() => onSelectRequest(request)}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' || e.key === ' ') {
                       e.preventDefault();
-                      onSelectThing(thing);
+                      onSelectRequest(request);
                     }
                   }}
                 >
                   <div className="thing-card-content">
-                    <div className="thing-name">{thing.name}</div>
-                    {thing.description && (
-                      <div className="thing-description">{thing.description}</div>
+                    <div className="thing-name">{request.name}</div>
+                    {request.description && (
+                      <div className="thing-description">{request.description}</div>
                     )}
                     <div className="thing-sharing-summary" aria-label="Sharing">
                       Shared with{' '}
                       {ownerGroups.length === 0
                         ? '0 groups'
-                        : `${sharedCountByThingId[thing.id] ?? 0}/${ownerGroups.length} groups`}
+                        : `${sharedCountByRequestId[request.id] ?? 0}/${ownerGroups.length} groups`}
                     </div>
                   </div>
                 </div>
@@ -327,15 +327,14 @@ function MyThingsPanel({
           </ul>
         </>
       )}
-      {!myThingsLoading && !myThingsError && myThings.length === 0 && !showAddForm && (
-        <p className="status">You haven&apos;t added any things yet.</p>
+      {!myRequestsLoading && !myRequestsError && myRequests.length === 0 && !showAddForm && (
+        <p className="status">You haven&apos;t added any requests yet.</p>
       )}
 
-      {/* Bulk Edit sharing modal */}
       {bulkModal === 'sharing' && (
-        <div className="my-things-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="bulk-sharing-title">
+        <div className="my-things-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="bulk-sharing-request-title">
           <div className="my-things-modal-card">
-            <h3 id="bulk-sharing-title">Edit sharing for {selectedCount} things</h3>
+            <h3 id="bulk-sharing-request-title">Edit sharing for {selectedCount} requests</h3>
             <form onSubmit={handleBulkSharingSave}>
               {bulkError && <p className="form-error" role="alert">{bulkError}</p>}
               {!ownerGroupsLoading && ownerGroups.length > 0 && (
@@ -344,13 +343,13 @@ function MyThingsPanel({
                   {ownerGroups.map((g) => (
                     <div key={g.id} className="form-checkbox-row">
                       <input
-                        id={`bulk-share-g-${g.id}`}
+                        id={`bulk-share-request-g-${g.id}`}
                         type="checkbox"
                         checked={bulkSharingGroupIds.includes(g.id)}
                         onChange={() => toggleBulkGroup(g.id)}
                         disabled={bulkSaving}
                       />
-                      <label className="form-label" htmlFor={`bulk-share-g-${g.id}`}>{g.name}</label>
+                      <label className="form-label" htmlFor={`bulk-share-request-g-${g.id}`}>{g.name}</label>
                     </div>
                   ))}
                 </>
@@ -368,11 +367,10 @@ function MyThingsPanel({
         </div>
       )}
 
-      {/* Bulk Delete confirmation */}
       {bulkModal === 'delete' && (
-        <div className="my-things-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="bulk-delete-title">
+        <div className="my-things-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="bulk-delete-request-title">
           <div className="my-things-modal-card">
-            <h3 id="bulk-delete-title">Delete {selectedCount} things?</h3>
+            <h3 id="bulk-delete-request-title">Delete {selectedCount} requests?</h3>
             <p className="modal-text">This cannot be undone.</p>
             {bulkError && <p className="form-error" role="alert">{bulkError}</p>}
             <div className="my-things-modal-actions">
@@ -395,4 +393,4 @@ function MyThingsPanel({
   );
 }
 
-export default MyThingsPanel;
+export default MyRequestsPanel;

@@ -1,15 +1,15 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
 
-export function useMyThings(userId) {
-  const [myThings, setMyThings] = useState([]);
+export function useMyRequests(userId) {
+  const [myRequests, setMyRequests] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
   useEffect(() => {
     if (!userId) return;
     let isMounted = true;
-    async function fetchMyThings() {
+    async function fetchMyRequests() {
       try {
         setLoading(true);
         setError(null);
@@ -17,24 +17,24 @@ export function useMyThings(userId) {
           .from('items')
           .select('id, name, description, user_id, type')
           .eq('user_id', userId)
-          .eq('type', 'thing');
+          .eq('type', 'request');
 
         if (fetchError) throw fetchError;
         if (!isMounted) return;
-        setMyThings(data ?? []);
+        setMyRequests(data ?? []);
       } catch (err) {
         if (!isMounted) return;
-        setError(err.message || 'Failed to load your things.');
+        setError(err.message || 'Failed to load your requests.');
       } finally {
         if (!isMounted) return;
         setLoading(false);
       }
     }
-    fetchMyThings();
+    fetchMyRequests();
     return () => {
       isMounted = false;
     };
   }, [userId]);
 
-  return { myThings, setMyThings, loading, error };
+  return { myRequests, setMyRequests, loading, error };
 }

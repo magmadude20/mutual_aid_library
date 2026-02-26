@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
 import { useUserProfile } from '../hooks/useUserProfile';
 import { useUserVisibleThings } from '../hooks/useUserVisibleThings';
-import MyThingsPanel from './MyThingsPanel';
+import { useUserVisibleRequests } from '../hooks/useUserVisibleRequests';
+import MyItemsPanel from './MyItemsPanel';
 import './UserDetailPage.css';
 
 function UserDetailPage({
@@ -12,16 +13,36 @@ function UserDetailPage({
   setMyThings,
   myThingsLoading,
   myThingsError,
+  myRequests,
+  setMyRequests,
+  myRequestsLoading,
+  myRequestsError,
   showAddForm,
   onShowAddForm,
   addForm,
   onAddSubmit,
+  showAddRequestForm,
+  onShowAddRequestForm,
+  addRequestForm,
+  onAddRequestSubmit,
   onSelectThing,
+  onSelectRequest,
 }) {
   const { userId } = useParams();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeItemsTab = searchParams.get('tab') === 'requests' ? 'requests' : 'things';
+
+  function handleItemsTabChange(tab) {
+    if (tab === 'requests') {
+      setSearchParams({ tab: 'requests' }, { replace: true });
+    } else {
+      setSearchParams({}, { replace: true });
+    }
+  }
   const { fullName, contactInfo, loading: profileLoading, error: profileError, refetch: refetchProfile } = useUserProfile(userId);
   const { things, loading: thingsLoading, error: thingsError } = useUserVisibleThings(userId);
+  const { requests, loading: requestsLoading, error: requestsError } = useUserVisibleRequests(userId);
 
   const [editingProfile, setEditingProfile] = useState(false);
   const [editFullName, setEditFullName] = useState('');
@@ -202,19 +223,30 @@ function UserDetailPage({
       </header>
 
       {isSelf && (
-        <section className="user-detail-my-things-section" aria-label="My things">
-          <MyThingsPanel
+        <section className="user-detail-my-things-section" aria-label="My things and requests">
+          <MyItemsPanel
             user={user}
             myThings={myThings}
             setMyThings={setMyThings}
             myThingsLoading={myThingsLoading}
             myThingsError={myThingsError}
+            myRequests={myRequests}
+            setMyRequests={setMyRequests}
+            myRequestsLoading={myRequestsLoading}
+            myRequestsError={myRequestsError}
             showAddForm={showAddForm}
             onShowAddForm={onShowAddForm}
             addForm={addForm}
             onAddSubmit={onAddSubmit}
+            showAddRequestForm={showAddRequestForm}
+            onShowAddRequestForm={onShowAddRequestForm}
+            addRequestForm={addRequestForm}
+            onAddRequestSubmit={onAddRequestSubmit}
             onSelectThing={onSelectThing}
-            canAddThings={!needsProfileSetup}
+            onSelectRequest={onSelectRequest}
+            canAddItems={!needsProfileSetup}
+            activeTab={activeItemsTab}
+            onTabChange={handleItemsTabChange}
           />
         </section>
       )}
@@ -239,6 +271,35 @@ function UserDetailPage({
                     <div className="thing-name">{thing.name}</div>
                     {thing.description && (
                       <div className="thing-description">{thing.description}</div>
+                    )}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      )}
+
+      {!isSelf && (
+        <section className="user-detail-things" aria-label="Requests">
+          <h3 className="map-section-title">Requests you can respond to</h3>
+          {requestsLoading && <p className="status">Loading requests…</p>}
+          {requestsError && <p className="status error" role="alert">{requestsError}</p>}
+          {!requestsLoading && !requestsError && requests.length === 0 && (
+            <p className="status">No requests here.</p>
+          )}
+          {!requestsLoading && !requestsError && requests.length > 0 && (
+            <ul className="user-detail-things-list" aria-label="Requests">
+              {requests.map((request) => (
+                <li key={request.id}>
+                  <button
+                    type="button"
+                    className="thing-card thing-card-clickable"
+                    onClick={() => navigate(`/thing/${request.id}`, { state: { thing: request } })}
+                  >
+                    <div className="thing-name">{request.name}</div>
+                    {request.description && (
+                      <div className="thing-description">{request.description}</div>
                     )}
                   </button>
                 </li>

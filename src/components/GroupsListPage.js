@@ -53,7 +53,7 @@ function GroupsListPage({ user }) {
                 <span className="group-name">{g.name}</span>
                 {g.description && <span className="group-description">{g.description}</span>}
                 <span className="group-card-summary">
-                  {memberCountByGroupId[g.id] ?? 0} users sharing {thingCountByGroupId[g.id] ?? 0} things
+                  {memberCountByGroupId[g.id] ?? 0} users sharing {thingCountByGroupId[g.id] ?? 0} items
                 </span>
               </Link>
             </li>
@@ -92,7 +92,7 @@ function GroupsListPage({ user }) {
                   <span className="group-name">{g.name}</span>
                   {g.description && <span className="group-description">{g.description}</span>}
                   <span className="group-card-summary">
-                    {memberCountByGroupId[g.id] ?? 0} users sharing {thingCountByGroupId[g.id] ?? 0} things
+                    {memberCountByGroupId[g.id] ?? 0} users sharing {thingCountByGroupId[g.id] ?? 0} items
                   </span>
                 </div>
                 <button

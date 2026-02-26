@@ -1,40 +1,39 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
 
-export function useMyThings(userId) {
-  const [myThings, setMyThings] = useState([]);
-  const [loading, setLoading] = useState(false);
+export function useRequests(session) {
+  const [requests, setRequests] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    if (!userId) return;
+    if (!session) return;
     let isMounted = true;
-    async function fetchMyThings() {
+    async function fetchRequests() {
       try {
         setLoading(true);
         setError(null);
         const { data, error: fetchError } = await supabase
           .from('items')
           .select('id, name, description, user_id, type')
-          .eq('user_id', userId)
-          .eq('type', 'thing');
+          .eq('type', 'request');
 
         if (fetchError) throw fetchError;
         if (!isMounted) return;
-        setMyThings(data ?? []);
+        setRequests(data ?? []);
       } catch (err) {
         if (!isMounted) return;
-        setError(err.message || 'Failed to load your things.');
+        setError(err.message || 'Failed to load requests.');
       } finally {
         if (!isMounted) return;
         setLoading(false);
       }
     }
-    fetchMyThings();
+    fetchRequests();
     return () => {
       isMounted = false;
     };
-  }, [userId]);
+  }, [session]);
 
-  return { myThings, setMyThings, loading, error };
+  return { requests, setRequests, loading, error };
 }

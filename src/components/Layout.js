@@ -4,7 +4,7 @@ function Layout({ user, logout }) {
   const location = useLocation();
   const pathname = location.pathname;
   const hideTabs =
-    pathname.startsWith('/join/');
+    pathname.startsWith('/join/') || pathname.startsWith('/admin');
 
   return (
     <div className="App">

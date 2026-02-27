@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Routes, Route, useNavigate, Navigate } from 'react-router-dom';
+import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { supabase } from './lib/supabaseClient';
 import { useAuth } from './hooks/useAuth';
 import { useThings } from './hooks/useThings';
@@ -12,6 +12,8 @@ import Layout from './components/Layout';
 import ThingDetailRoute from './components/ThingDetailRoute';
 import ThingsPanel from './components/ThingsPanel';
 import RequestsPanel from './components/RequestsPanel';
+import AdminPage from './components/AdminPage';
+import NotFoundPage from './components/NotFoundPage';
 import JoinGroupPage from './components/JoinGroupPage';
 import GroupsListPage from './components/GroupsListPage';
 import CreateGroupPage from './components/CreateGroupPage';
@@ -21,6 +23,7 @@ import './App.css';
 
 function App() {
   const { session, user, loading: authLoading, logout } = useAuth();
+  const location = useLocation();
   const { things, setThings, loading: thingsLoading, error: thingsError } = useThings(session);
   const { myThings, setMyThings, loading: myThingsLoading, error: myThingsError } = useMyThings(user?.id);
   const { requests, setRequests, loading: requestsLoading, error: requestsError } = useRequests(session);
@@ -134,6 +137,16 @@ function App() {
   }
 
   if (!session) {
+    // Show 404 for /admin when not logged in; login screen for everything else.
+    if (location.pathname.startsWith('/admin')) {
+      return (
+        <div className="App">
+          <main className="App-main">
+            <NotFoundPage />
+          </main>
+        </div>
+      );
+    }
     return (
       <div className="App">
         <Login />
@@ -272,6 +285,8 @@ function App() {
             />
           }
         />
+        <Route path="admin" element={<AdminPage user={user} />} />
+        <Route path="*" element={<NotFoundPage />} />
       </Route>
     </Routes>
   );

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
 import { useGroupMembers } from '../hooks/useGroupMembers';
 import { useMyThings } from '../hooks/useMyThings';
@@ -14,6 +14,7 @@ const DEFAULT_LNG = -86.774204;
 function GroupDetailPage({ user }) {
   const { groupId } = useParams();
   const navigate = useNavigate();
+  const { state } = useLocation();
   const [group, setGroup] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -255,8 +256,18 @@ function GroupDetailPage({ user }) {
 
   return (
     <div className="group-detail-page">
-      <button type="button" className="back-link" onClick={() => navigate('/groups')}>
-        ← Back to My groups
+      <button
+        type="button"
+        className="back-link"
+        onClick={() => {
+          if (state?.fromAdmin) {
+            navigate(-1);
+          } else {
+            navigate('/groups');
+          }
+        }}
+      >
+        ← Back
       </button>
       <div className="group-detail-header">
         {editingGroup ? (

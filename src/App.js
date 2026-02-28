@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { supabase } from './lib/supabaseClient';
 import { useAuth } from './hooks/useAuth';
@@ -7,6 +7,7 @@ import { useMyThings } from './hooks/useMyThings';
 import { useRequests } from './hooks/useRequests';
 import { useMyRequests } from './hooks/useMyRequests';
 import { useOwnerGroups } from './hooks/useOwnerGroups';
+import { useMyGroups } from './hooks/useMyGroups';
 import Login from './components/Login';
 import Layout from './components/Layout';
 import ThingDetailRoute from './components/ThingDetailRoute';
@@ -43,6 +44,24 @@ function App() {
   const [requestFormError, setRequestFormError] = useState(null);
   const [requestSubmitting, setRequestSubmitting] = useState(false);
   const { groups: ownerGroups } = useOwnerGroups(user?.id);
+  const { groups: myGroups, loading: myGroupsLoading } = useMyGroups(user?.id);
+  const hasRedirectedNoGroupsToGroups = useRef(false);
+
+  // If user logged in without an invite (not on /join/:token) and has no groups, send them to Groups page once; then they can switch tabs freely
+  useEffect(() => {
+    if (!user) {
+      hasRedirectedNoGroupsToGroups.current = false;
+      return;
+    }
+    if (myGroupsLoading || hasRedirectedNoGroupsToGroups.current) return;
+    const path = location.pathname;
+    const isJoinPage = path.startsWith('/join/');
+    const isGroupsArea = path === '/groups' || path.startsWith('/groups/');
+    if (!isJoinPage && !isGroupsArea && myGroups.length === 0) {
+      hasRedirectedNoGroupsToGroups.current = true;
+      navigate('/groups', { replace: true });
+    }
+  }, [user, myGroupsLoading, myGroups.length, location.pathname, navigate]);
 
   async function handleAddSubmit(e) {
     e.preventDefault();
@@ -62,7 +81,7 @@ function App() {
           description: description.trim() || null,
           type: 'thing',
         })
-        .select('id, name, description, user_id, type')
+        .select('id, name, description, user_id, type, created_at')
         .single();
 
       if (insertError) throw insertError;
@@ -103,7 +122,7 @@ function App() {
           description: requestDescription.trim() || null,
           type: 'request',
         })
-        .select('id, name, description, user_id, type')
+        .select('id, name, description, user_id, type, created_at')
         .single();
 
       if (insertError) throw insertError;

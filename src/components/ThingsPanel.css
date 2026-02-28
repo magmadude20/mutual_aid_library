@@ -9,6 +9,43 @@
   border-radius: 8px;
 }
 
+.things-panel-filters-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0;
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #e4e6eb;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+}
+
+.things-panel-filters-toggle:hover {
+  color: #f0f2f5;
+}
+
+.things-panel-filters-toggle-icon {
+  font-size: 0.75rem;
+  color: #9ca3af;
+}
+
+.things-panel-filters-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding-top: 0.25rem;
+  border-top: 1px solid #3a3f47;
+}
+
+.things-panel-filters-content[hidden] {
+  display: none;
+}
+
 .things-panel-section-title {
   margin: 0 0 0.5rem;
   font-size: 1.1rem;

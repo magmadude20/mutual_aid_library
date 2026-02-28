@@ -6,6 +6,7 @@ function Login() {
   const [mode, setMode] = useState('login'); // 'login' | 'signup'
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [displayName, setDisplayName] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [message, setMessage] = useState('');
@@ -24,11 +25,24 @@ function Login() {
         if (signInError) throw signInError;
         // Session listener in App will pick up the change.
       } else {
-        const { error: signUpError } = await supabase.auth.signUp({
+        const trimmedName = displayName.trim();
+        if (!trimmedName) {
+          setError('Display name is required.');
+          setLoading(false);
+          return;
+        }
+        const { data, error: signUpError } = await supabase.auth.signUp({
           email,
           password,
+          options: { data: { full_name: trimmedName } },
         });
         if (signUpError) throw signUpError;
+        if (data?.user) {
+          await supabase.from('profiles').upsert({
+            id: data.user.id,
+            full_name: trimmedName,
+          });
+        }
         setMessage('Check your email to confirm your account (if confirmations are enabled).');
       }
     } catch (err) {
@@ -46,7 +60,7 @@ function Login() {
           <button
             type="button"
             className={`auth-toggle-button ${mode === 'login' ? 'auth-toggle-active' : ''}`}
-            onClick={() => setMode('login')}
+            onClick={() => { setMode('login'); setDisplayName(''); }}
           >
             Log in
           </button>
@@ -79,6 +93,23 @@ function Login() {
             disabled={loading}
             autoComplete="email"
           />
+          {mode === 'signup' && (
+            <>
+              <label className="form-label" htmlFor="auth-display-name">
+                Display name
+              </label>
+              <input
+                id="auth-display-name"
+                type="text"
+                className="form-input"
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)}
+                placeholder="Your name"
+                disabled={loading}
+                autoComplete="name"
+              />
+            </>
+          )}
           <label className="form-label" htmlFor="auth-password">
             Password
           </label>

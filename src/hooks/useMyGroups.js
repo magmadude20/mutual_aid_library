@@ -19,7 +19,12 @@ export function useMyGroups(userId) {
           .eq('user_id', userId);
         if (fetchError) throw fetchError;
         if (!isMounted) return;
-        const groupIds = (data ?? []).map((r) => r.group_id);
+        const memberships = data ?? [];
+        const groupIds = memberships.map((r) => r.group_id);
+        const roleByGroupId = {};
+        memberships.forEach((m) => {
+          roleByGroupId[m.group_id] = m.role;
+        });
         if (groupIds.length === 0) {
           setGroups([]);
           return;
@@ -31,7 +36,11 @@ export function useMyGroups(userId) {
           .order('name');
         if (groupError) throw groupError;
         if (!isMounted) return;
-        setGroups(groupData ?? []);
+        const groupsWithRole = (groupData ?? []).map((g) => ({
+          ...g,
+          myRole: roleByGroupId[g.id] ?? null,
+        }));
+        setGroups(groupsWithRole);
       } catch (err) {
         if (!isMounted) return;
         setError(err.message || 'Failed to load groups.');

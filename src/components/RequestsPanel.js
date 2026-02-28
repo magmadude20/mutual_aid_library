@@ -7,6 +7,8 @@ function RequestsPanel({ user, requests, loading, error, onSelectRequest }) {
   const [showMyRequests, setShowMyRequests] = useState(false);
   const [groupFilter, setGroupFilter] = useState('all');
   const [requestGroupIds, setRequestGroupIds] = useState({});
+  const [filtersExpanded, setFiltersExpanded] = useState(false);
+  const [sortBy, setSortBy] = useState('newest');
 
   const { groups: myGroups } = useMyGroups(user?.id);
 
@@ -39,13 +41,30 @@ function RequestsPanel({ user, requests, loading, error, onSelectRequest }) {
   }, [requests]);
 
   const filteredRequests = useMemo(() => {
-    return (requests ?? []).filter((request) => {
+    const list = (requests ?? []).filter((request) => {
       const isMyRequest = user?.id && request.user_id === user.id;
       if (!showMyRequests && isMyRequest) return false;
       if (groupFilter === 'all') return true;
       return (requestGroupIds[request.id] ?? []).includes(groupFilter);
     });
-  }, [requests, showMyRequests, groupFilter, requestGroupIds, user?.id]);
+    const sorted = [...list].sort((a, b) => {
+      if (sortBy === 'newest') {
+        const aAt = a.created_at ? new Date(a.created_at).getTime() : 0;
+        const bAt = b.created_at ? new Date(b.created_at).getTime() : 0;
+        return bAt - aAt;
+      }
+      if (sortBy === 'oldest') {
+        const aAt = a.created_at ? new Date(a.created_at).getTime() : 0;
+        const bAt = b.created_at ? new Date(b.created_at).getTime() : 0;
+        return aAt - bAt;
+      }
+      const aName = (a.name || '').toLowerCase();
+      const bName = (b.name || '').toLowerCase();
+      if (sortBy === 'a-z') return aName.localeCompare(bName);
+      return bName.localeCompare(aName); // z-a
+    });
+    return sorted;
+  }, [requests, showMyRequests, groupFilter, requestGroupIds, user?.id, sortBy]);
 
   return (
     <div
@@ -62,36 +81,75 @@ function RequestsPanel({ user, requests, loading, error, onSelectRequest }) {
       )}
 
       {!loading && !error && (requests?.length ?? 0) > 0 && (
-        <div className="things-panel-filters" role="group" aria-label="Filter requests">
-          <div className="things-panel-filter-row">
-            <label className="things-panel-filter-checkbox">
-              <input
-                type="checkbox"
-                checked={showMyRequests}
-                onChange={(e) => setShowMyRequests(e.target.checked)}
-                aria-label="Show my requests"
-              />
-              <span>Show my requests</span>
-            </label>
-          </div>
-          <div className="things-panel-filter-row">
-            <label htmlFor="requests-panel-group-filter" className="things-panel-filter-label">
-              Requests shared in group
-            </label>
-            <select
-              id="requests-panel-group-filter"
-              className="things-panel-group-select"
-              value={groupFilter}
-              onChange={(e) => setGroupFilter(e.target.value)}
-              aria-label="Filter by group"
-            >
-              <option value="all">All</option>
-              {myGroups?.map((g) => (
-                <option key={g.id} value={g.id}>
-                  {g.name}
-                </option>
-              ))}
-            </select>
+        <div
+          className="things-panel-filters"
+          role="group"
+          aria-label={filtersExpanded ? 'Filter requests' : 'Sort and filter'}
+        >
+          <button
+            type="button"
+            className="things-panel-filters-toggle"
+            onClick={() => setFiltersExpanded((v) => !v)}
+            aria-expanded={filtersExpanded}
+            aria-controls="requests-panel-filters-content"
+          >
+            <span className="things-panel-filters-toggle-label">Sort and filter</span>
+            <span className="things-panel-filters-toggle-icon" aria-hidden="true">
+              {filtersExpanded ? '▼' : '▶'}
+            </span>
+          </button>
+          <div
+            id="requests-panel-filters-content"
+            className="things-panel-filters-content"
+            hidden={!filtersExpanded}
+          >
+            <div className="things-panel-filter-row">
+              <label className="things-panel-filter-checkbox">
+                <input
+                  type="checkbox"
+                  checked={showMyRequests}
+                  onChange={(e) => setShowMyRequests(e.target.checked)}
+                  aria-label="Show my requests"
+                />
+                <span>Show my requests</span>
+              </label>
+            </div>
+            <div className="things-panel-filter-row">
+              <label htmlFor="requests-panel-group-filter" className="things-panel-filter-label">
+                Requests shared in group
+              </label>
+              <select
+                id="requests-panel-group-filter"
+                className="things-panel-group-select"
+                value={groupFilter}
+                onChange={(e) => setGroupFilter(e.target.value)}
+                aria-label="Filter by group"
+              >
+                <option value="all">All</option>
+                {myGroups?.map((g) => (
+                  <option key={g.id} value={g.id}>
+                    {g.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="things-panel-filter-row">
+              <label htmlFor="requests-panel-sort" className="things-panel-filter-label">
+                Sort by
+              </label>
+              <select
+                id="requests-panel-sort"
+                className="things-panel-group-select"
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                aria-label="Sort order"
+              >
+                <option value="newest">Newest first</option>
+                <option value="oldest">Oldest first</option>
+                <option value="a-z">Name A–Z</option>
+                <option value="z-a">Name Z–A</option>
+              </select>
+            </div>
           </div>
         </div>
       )}

@@ -50,7 +50,12 @@ function GroupsListPage({ user }) {
           {groups.map((g) => (
             <li key={g.id}>
               <Link to={`/groups/${g.id}`} className="group-card group-card-link">
-                <span className="group-name">{g.name}</span>
+                <span className="group-name">
+                  {g.name}
+                  {g.myRole === 'ADMIN' && (
+                    <span className="group-card-admin-badge" aria-label="You are an admin">Admin</span>
+                  )}
+                </span>
                 {g.description && <span className="group-description">{g.description}</span>}
                 <span className="group-card-summary">
                   {memberCountByGroupId[g.id] ?? 0} users sharing {thingCountByGroupId[g.id] ?? 0} items

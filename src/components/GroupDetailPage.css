@@ -6,8 +6,16 @@
   margin-bottom: 1rem;
 }
 
+.group-detail-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+
 .group-detail-name {
-  margin: 0 0 0.5rem;
+  margin: 0;
   font-size: 1.35rem;
   font-weight: 600;
 }
@@ -30,7 +38,43 @@
 }
 
 .group-detail-location {
-  margin-top: 1.5rem;
+  /* margin-top: 1.5rem; */
+}
+
+.group-detail-location-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0;
+  font: inherit;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  color: inherit;
+}
+
+.group-detail-location-toggle:hover .group-detail-location-toggle-title {
+  color: #f0f2f5;
+}
+
+.group-detail-location-toggle-title {
+  margin: 0;
+}
+
+.group-detail-location-toggle-icon {
+  font-size: 0.75rem;
+  color: #9ca3af;
+}
+
+.group-detail-location-content {
+  margin-top: 0.5rem;
+}
+
+.group-detail-location-content[hidden] {
+  display: none;
 }
 
 .group-detail-map {
@@ -105,10 +149,10 @@
   margin-bottom: 0.5rem;
 }
 
-.group-detail-admin-buttons {
+.group-detail-header-buttons {
   display: flex;
   gap: 0.5rem;
-  margin-top: 0.75rem;
+  flex-shrink: 0;
 }
 
 .group-detail-admin-buttons .delete-button {
@@ -116,7 +160,12 @@
   color: #fca5a5;
 }
 
-.group-detail-admin-buttons .delete-button:hover {
+.group-detail-header-buttons .delete-button {
+  border-color: #dc2626;
+  color: #fca5a5;
+}
+
+.group-detail-header-buttons .delete-button:hover {
   background: #7f1d1d;
 }
 
@@ -154,10 +203,6 @@
   display: flex;
   gap: 0.75rem;
   margin-top: 1.25rem;
-}
-
-.group-detail-actions {
-  margin-top: 1.5rem;
 }
 
 .group-detail-your-things {

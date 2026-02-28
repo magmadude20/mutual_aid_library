@@ -30,6 +30,8 @@ function GroupDetailPage({ user }) {
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [deleteSubmitting, setDeleteSubmitting] = useState(false);
   const [deleteError, setDeleteError] = useState(null);
+  const [locationExpanded, setLocationExpanded] = useState(false);
+  const [inviteCopied, setInviteCopied] = useState(false);
   const [sharedThingIds, setSharedThingIds] = useState([]);
   const [sharedThingsLoading, setSharedThingsLoading] = useState(false);
   const [shareAllBusy, setShareAllBusy] = useState(false);
@@ -167,6 +169,8 @@ function GroupDetailPage({ user }) {
     const url = `${window.location.origin}/join/${group.invite_token}`;
     try {
       await navigator.clipboard.writeText(url);
+      setInviteCopied(true);
+      setTimeout(() => setInviteCopied(false), 2000);
     } catch {
       // ignore
     }
@@ -329,21 +333,28 @@ function GroupDetailPage({ user }) {
           </form>
         ) : (
           <>
-            <h2 className="group-detail-name">{group.name}</h2>
+            <div className="group-detail-title-row">
+              <h2 className="group-detail-name">{group.name}</h2>
+              <div className="group-detail-header-buttons">
+                {isAdmin && (
+                  <>
+                    <button type="button" className="header-button" onClick={startEditing}>
+                      Edit group
+                    </button>
+                    <button type="button" className="header-button delete-button" onClick={() => setDeleteConfirmOpen(true)}>
+                      Delete group
+                    </button>
+                  </>
+                )}
+                <button type="button" className="header-button" onClick={handleLeave}>
+                  Leave group
+                </button>
+              </div>
+            </div>
             {group.description && <p className="group-detail-description">{group.description}</p>}
             <p className="group-detail-summary">
               {membersLoading ? '…' : members.length} users sharing {sharedThingsLoading ? '…' : sharedThingIds.length} items
             </p>
-            {isAdmin && (
-              <div className="group-detail-admin-buttons">
-                <button type="button" className="header-button" onClick={startEditing}>
-                  Edit group
-                </button>
-                <button type="button" className="header-button delete-button" onClick={() => setDeleteConfirmOpen(true)}>
-                  Delete group
-                </button>
-              </div>
-            )}
           </>
         )}
       </div>
@@ -351,19 +362,36 @@ function GroupDetailPage({ user }) {
 
       {group.latitude != null && group.longitude != null && Number.isFinite(group.latitude) && Number.isFinite(group.longitude) && !editingGroup && (
         <section className="group-detail-location" aria-label="Location">
-          <h3 className="map-section-title">Location</h3>
-          <div className="map-wrapper group-detail-map">
-            <Map
-              markers={[
-                {
-                  groupId: group.id,
-                  latitude: group.latitude,
-                  longitude: group.longitude,
-                  fullName: group.name,
-                  href: `/groups/${group.id}`,
-                },
-              ]}
-            />
+          <button
+            type="button"
+            className="group-detail-location-toggle"
+            onClick={() => setLocationExpanded((v) => !v)}
+            aria-expanded={locationExpanded}
+            aria-controls="group-detail-location-content"
+          >
+            <span className="group-detail-location-toggle-icon" aria-hidden="true">
+              {locationExpanded ? '▼' : '▶'}
+            </span>
+            <h3 className="map-section-title group-detail-location-toggle-title">Location</h3>
+          </button>
+          <div
+            id="group-detail-location-content"
+            className="group-detail-location-content"
+            hidden={!locationExpanded}
+          >
+            <div className="map-wrapper group-detail-map">
+              <Map
+                markers={[
+                  {
+                    groupId: group.id,
+                    latitude: group.latitude,
+                    longitude: group.longitude,
+                    fullName: group.name,
+                    href: `/groups/${group.id}`,
+                  },
+                ]}
+              />
+            </div>
           </div>
         </section>
       )}
@@ -372,7 +400,7 @@ function GroupDetailPage({ user }) {
         <h3 className="map-section-title">Invite link</h3>
         <p className="group-invite-hint">Anyone with this link can join.</p>
         <button type="button" className="header-button" onClick={copyInviteLink}>
-          Copy invite link
+          {inviteCopied ? 'Copied!' : 'Copy invite link'}
         </button>
       </section>
 
@@ -402,12 +430,6 @@ function GroupDetailPage({ user }) {
           </ul>
         )}
       </section>
-
-      <div className="group-detail-actions">
-        <button type="button" className="header-button" onClick={handleLeave}>
-          Leave group
-        </button>
-      </div>
 
       <section className="group-detail-your-things" aria-label="Your things in this group">
         <h3 className="map-section-title">Your things</h3>

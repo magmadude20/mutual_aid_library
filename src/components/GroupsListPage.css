@@ -63,6 +63,19 @@
   margin-bottom: 0.25rem;
 }
 
+.group-card-admin-badge {
+  display: inline-block;
+  margin-left: 0.5rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: #9ca3af;
+  background: #374151;
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+  vertical-align: middle;
+}
+
 .group-description {
   display: block;
   font-size: 0.875rem;

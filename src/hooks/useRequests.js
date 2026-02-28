@@ -15,7 +15,7 @@ export function useRequests(session) {
         setError(null);
         const { data, error: fetchError } = await supabase
           .from('items')
-          .select('id, name, description, user_id, type')
+          .select('id, name, description, user_id, type, created_at')
           .eq('type', 'request');
 
         if (fetchError) throw fetchError;

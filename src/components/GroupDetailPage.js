@@ -314,16 +314,6 @@ function GroupDetailPage({ user }) {
             <div className="group-detail-title-row">
               <h2 className="group-detail-name">{group.name}</h2>
               <div className="group-detail-header-buttons">
-                {isAdmin && (
-                  <>
-                    <button type="button" className="header-button" onClick={startEditing}>
-                      Edit group
-                    </button>
-                    <button type="button" className="header-button delete-button" onClick={() => setDeleteConfirmOpen(true)}>
-                      Delete group
-                    </button>
-                  </>
-                )}
                 <button type="button" className="header-button" onClick={handleLeave}>
                   Leave group
                 </button>
@@ -423,6 +413,17 @@ function GroupDetailPage({ user }) {
         </button>
         <p className="group-invite-hint">Anyone with this link can join.</p>
       </section>
+
+      {isAdmin && !editingGroup && (
+        <div className="group-detail-admin-actions">
+          <button type="button" className="header-button" onClick={startEditing}>
+            Edit group
+          </button>
+          <button type="button" className="header-button delete-button" onClick={() => setDeleteConfirmOpen(true)}>
+            Delete group
+          </button>
+        </div>
+      )}
       </div>
 
       <section className="group-detail-your-sharing" aria-label="Your sharing">

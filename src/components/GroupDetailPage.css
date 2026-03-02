@@ -39,6 +39,22 @@
   margin-top: 1.5rem;
 }
 
+.group-detail-admin-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.group-detail-admin-actions .delete-button {
+  border-color: #dc2626;
+  color: #fca5a5;
+}
+
+.group-detail-admin-actions .delete-button:hover {
+  background: #7f1d1d;
+}
+
 .group-detail-location {
   margin-top: 1rem;
 }

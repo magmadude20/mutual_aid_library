@@ -14,7 +14,7 @@ delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({ iconUrl, iconRetinaUrl, shadowUrl });
 
 const DEFAULT_CENTER = [45, -93];
-const DEFAULT_ZOOM = 10;
+const DEFAULT_ZOOM = 5;
 
 function FitBounds({ markers }) {
   const map = useMap();

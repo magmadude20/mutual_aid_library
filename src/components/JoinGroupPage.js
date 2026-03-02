@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
+import Map from './Map';
 import './JoinGroupPage.css';
 
 function JoinGroupPage({ user }) {
@@ -83,11 +84,39 @@ function JoinGroupPage({ user }) {
   }
 
   const alreadyMember = group.already_member === true;
+  const hasLocation =
+    group.latitude != null &&
+    group.longitude != null &&
+    Number.isFinite(group.latitude) &&
+    Number.isFinite(group.longitude);
 
   return (
     <div className="join-group-page">
       <h2 className="join-group-title">Join group</h2>
-      <p className="join-group-name">{group.name}</p>
+      <div className="join-group-info">
+        <h3 className="join-group-name">{group.name}</h3>
+        {group.description && (
+          <p className="join-group-description">{group.description}</p>
+        )}
+        {hasLocation && (
+          <div className="join-group-location">
+            <h4 className="join-group-location-title">Location</h4>
+            <div className="join-group-map-wrapper">
+              <Map
+                markers={[
+                  {
+                    groupId: group.id,
+                    latitude: group.latitude,
+                    longitude: group.longitude,
+                    fullName: group.name,
+                    href: `/groups/${group.id}`,
+                  },
+                ]}
+              />
+            </div>
+          </div>
+        )}
+      </div>
       {error && <p className="form-error" role="alert">{error}</p>}
       {alreadyMember ? (
         <>

@@ -133,6 +133,27 @@
   margin-bottom: 0.25rem;
 }
 
+.thing-card-title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.25rem;
+}
+
+.thing-card-title-row .thing-name {
+  margin-bottom: 0;
+}
+
+.item-yours-badge {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #9ca3af;
+  background: #374151;
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+}
+
 .thing-description {
   font-size: 0.875rem;
   color: #b0b4bb;

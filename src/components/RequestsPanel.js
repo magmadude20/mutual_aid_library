@@ -168,7 +168,12 @@ function RequestsPanel({ user, requests, loading, error, onSelectRequest }) {
                 className="thing-card thing-card-clickable"
                 onClick={() => onSelectRequest(request)}
               >
-                <div className="thing-name">{request.name}</div>
+                <div className="thing-card-title-row">
+                  <div className="thing-name">{request.name}</div>
+                  {user?.id && request.user_id === user.id && (
+                    <span className="item-yours-badge" aria-label="Your item">Yours</span>
+                  )}
+                </div>
                 {request.description && (
                   <div className="thing-description">{request.description}</div>
                 )}

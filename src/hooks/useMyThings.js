@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
 
 export function useMyThings(userId) {
@@ -6,7 +6,7 @@ export function useMyThings(userId) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
+  const refetch = useCallback(() => {
     if (!userId) return;
     let isMounted = true;
     async function fetchMyThings() {
@@ -15,7 +15,7 @@ export function useMyThings(userId) {
         setError(null);
         const { data, error: fetchError } = await supabase
           .from('items')
-          .select('id, name, description, user_id, type')
+          .select('id, name, description, user_id, type, created_at')
           .eq('user_id', userId)
           .eq('type', 'thing');
 
@@ -31,10 +31,12 @@ export function useMyThings(userId) {
       }
     }
     fetchMyThings();
-    return () => {
-      isMounted = false;
-    };
+    return () => { isMounted = false; };
   }, [userId]);
 
-  return { myThings, setMyThings, loading, error };
+  useEffect(() => {
+    refetch();
+  }, [refetch]);
+
+  return { myThings, setMyThings, loading, error, refetch };
 }

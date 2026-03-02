@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useOwnerGroups } from '../hooks/useOwnerGroups';
 import { supabase } from '../lib/supabaseClient';
+import AddItemModal from './AddItemModal';
 import './MyThingsPanel.css';
 
 function MyThingsPanel({
@@ -9,26 +10,12 @@ function MyThingsPanel({
   setMyThings,
   myThingsLoading,
   myThingsError,
-  showAddForm,
-  onShowAddForm,
-  addForm,
-  onAddSubmit,
+  onThingAdded,
   onSelectThing,
   canAddThings = true,
   showTitle = true,
 }) {
-  const {
-    name,
-    description,
-    formError,
-    submitting,
-    sharingGroupIds,
-    onNameChange,
-    onDescriptionChange,
-    onToggleSharingGroup,
-    onCancelAdd,
-  } = addForm;
-
+  const [addModalOpen, setAddModalOpen] = useState(false);
   const [selectedIds, setSelectedIds] = useState([]);
   const [bulkModal, setBulkModal] = useState(null); // 'sharing' | 'delete'
   const [bulkSharingGroupIds, setBulkSharingGroupIds] = useState([]);
@@ -154,12 +141,12 @@ function MyThingsPanel({
         <button
           type="button"
           className="header-button my-things-add-button"
-          onClick={() => onShowAddForm(!showAddForm)}
-          disabled={submitting || !canAddThings}
+          onClick={() => setAddModalOpen(true)}
+          disabled={!canAddThings}
         >
-          {showAddForm ? 'Cancel' : '+ Add new thing'}
+          + Add new thing
         </button>
-        {!showAddForm && !myThingsLoading && !myThingsError && myThings.length > 0 && (
+        {!myThingsLoading && !myThingsError && myThings.length > 0 && (
           <div className="my-things-header-bulk-buttons">
             <button
               type="button"
@@ -178,89 +165,11 @@ function MyThingsPanel({
           </div>
         )}
       </div>
-      {!canAddThings && (
-        <p className="my-things-profile-warning" role="alert">
-          You need to add your name and contact info before adding any things.
-        </p>
-      )}
       {myThingsLoading && <p className="status">Loading your things…</p>}
       {myThingsError && (
         <p className="status error" role="alert">
           {myThingsError}
         </p>
-      )}
-      {showAddForm && canAddThings && (
-        <div className="my-things-add-form-wrapper">
-          <form className="add-thing-form" onSubmit={onAddSubmit} aria-label="Add thing">
-            <h2 className="form-title">Add thing</h2>
-            {formError && (
-              <p className="form-error" role="alert">
-                {formError}
-              </p>
-            )}
-            <label className="form-label" htmlFor="thing-name">
-              Name
-            </label>
-            <input
-              id="thing-name"
-              type="text"
-              className="form-input"
-              value={name}
-              onChange={(e) => onNameChange(e.target.value)}
-              placeholder="Thing name"
-              required
-              disabled={submitting}
-              autoComplete="off"
-            />
-            <label className="form-label" htmlFor="thing-description">
-              Description (optional)
-            </label>
-            <textarea
-              id="thing-description"
-              className="form-input form-textarea"
-              value={description}
-              onChange={(e) => onDescriptionChange(e.target.value)}
-              placeholder="Description"
-              rows={3}
-              disabled={submitting}
-            />
-            <div className="add-thing-form-sharing">
-              <p className="add-thing-form-sharing-title">Sharing</p>
-              {!ownerGroupsLoading && ownerGroups?.length > 0 && (
-                <>
-                  <p className="add-thing-form-groups-label">Shared with groups:</p>
-                  {ownerGroups.map((g) => (
-                    <div key={g.id} className="form-checkbox-row">
-                      <input
-                        id={`add-thing-group-${g.id}`}
-                        type="checkbox"
-                        checked={sharingGroupIds?.includes(g.id)}
-                        onChange={() => onToggleSharingGroup?.(g.id)}
-                        disabled={submitting}
-                      />
-                      <label className="form-label" htmlFor={`add-thing-group-${g.id}`}>
-                        {g.name}
-                      </label>
-                    </div>
-                  ))}
-                </>
-              )}
-            </div>
-            <div className="add-thing-form-actions">
-              <button type="submit" className="submit-button" disabled={submitting}>
-                {submitting ? 'Adding…' : 'Add thing'}
-              </button>
-              <button
-                type="button"
-                className="header-button"
-                onClick={onCancelAdd}
-                disabled={submitting}
-              >
-                Cancel
-              </button>
-            </div>
-          </form>
-        </div>
       )}
       {!myThingsLoading && !myThingsError && myThings.length > 0 && (
         <>
@@ -327,7 +236,7 @@ function MyThingsPanel({
           </ul>
         </>
       )}
-      {!myThingsLoading && !myThingsError && myThings.length === 0 && !showAddForm && (
+      {!myThingsLoading && !myThingsError && myThings.length === 0 && (
         <p className="status">You haven&apos;t added any things yet.</p>
       )}
 
@@ -390,6 +299,18 @@ function MyThingsPanel({
             </div>
           </div>
         </div>
+      )}
+
+      {addModalOpen && (
+        <AddItemModal
+          type="thing"
+          userId={user?.id}
+          onSuccess={(data) => {
+            onThingAdded?.(data);
+            setAddModalOpen(false);
+          }}
+          onClose={() => setAddModalOpen(false)}
+        />
       )}
     </div>
   );

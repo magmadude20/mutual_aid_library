@@ -13,14 +13,8 @@ function MyItemsPanel({
   setMyRequests,
   myRequestsLoading,
   myRequestsError,
-  showAddForm,
-  onShowAddForm,
-  addForm,
-  onAddSubmit,
-  showAddRequestForm,
-  onShowAddRequestForm,
-  addRequestForm,
-  onAddRequestSubmit,
+  onThingAdded,
+  onRequestAdded,
   onSelectThing,
   onSelectRequest,
   canAddItems = true,
@@ -77,10 +71,7 @@ function MyItemsPanel({
             setMyThings={setMyThings}
             myThingsLoading={myThingsLoading}
             myThingsError={myThingsError}
-            showAddForm={showAddForm}
-            onShowAddForm={onShowAddForm}
-            addForm={addForm}
-            onAddSubmit={onAddSubmit}
+            onThingAdded={onThingAdded}
             onSelectThing={onSelectThing}
             canAddThings={canAddItems}
             showTitle={false}
@@ -101,10 +92,7 @@ function MyItemsPanel({
             setMyRequests={setMyRequests}
             myRequestsLoading={myRequestsLoading}
             myRequestsError={myRequestsError}
-            showAddForm={showAddRequestForm}
-            onShowAddForm={onShowAddRequestForm}
-            addForm={addRequestForm}
-            onAddSubmit={onAddRequestSubmit}
+            onRequestAdded={onRequestAdded}
             onSelectRequest={onSelectRequest}
             canAddRequests={canAddItems}
             showTitle={false}

@@ -6,10 +6,12 @@ import { useMyThings } from '../hooks/useMyThings';
 import { useMyRequests } from '../hooks/useMyRequests';
 import Map from './Map';
 import LocationPicker from './LocationPicker';
+import AddItemModal from './AddItemModal';
+import EditGroupSharingModal from './EditGroupSharingModal';
 import './GroupDetailPage.css';
 
-const DEFAULT_LAT = 36.16473;
-const DEFAULT_LNG = -86.774204;
+const DEFAULT_LAT = 45;
+const DEFAULT_LNG = -93;
 
 function GroupDetailPage({ user }) {
   const { groupId } = useParams();
@@ -31,14 +33,22 @@ function GroupDetailPage({ user }) {
   const [deleteSubmitting, setDeleteSubmitting] = useState(false);
   const [deleteError, setDeleteError] = useState(null);
   const [locationExpanded, setLocationExpanded] = useState(false);
+  const [membersExpanded, setMembersExpanded] = useState(false);
   const [inviteCopied, setInviteCopied] = useState(false);
   const [sharedThingIds, setSharedThingIds] = useState([]);
   const [sharedThingsLoading, setSharedThingsLoading] = useState(false);
-  const [shareAllBusy, setShareAllBusy] = useState(false);
+  const [sharedThingsRefresh, setSharedThingsRefresh] = useState(0);
+  const [sharedThingsList, setSharedThingsList] = useState([]);
+  const [sharedRequestsList, setSharedRequestsList] = useState([]);
+  const [sharedItemsLoading, setSharedItemsLoading] = useState(false);
   const [thingsError, setThingsError] = useState(null);
+  const [addThingModalOpen, setAddThingModalOpen] = useState(false);
+  const [addRequestModalOpen, setAddRequestModalOpen] = useState(false);
+  const [editThingsSharingOpen, setEditThingsSharingOpen] = useState(false);
+  const [editRequestsSharingOpen, setEditRequestsSharingOpen] = useState(false);
   const { members, loading: membersLoading, error: membersError } = useGroupMembers(groupId);
-  const { myThings, loading: myThingsLoading, error: myThingsError } = useMyThings(user?.id);
-  const { myRequests, loading: myRequestsLoading, error: myRequestsError } = useMyRequests(user?.id);
+  const { myThings, loading: myThingsLoading, error: myThingsError, refetch: refetchMyThings } = useMyThings(user?.id);
+  const { myRequests, loading: myRequestsLoading, error: myRequestsError, refetch: refetchMyRequests } = useMyRequests(user?.id);
 
   useEffect(() => {
     if (!groupId || !user?.id) return;
@@ -97,72 +107,39 @@ function GroupDetailPage({ user }) {
       }
     })();
     return () => { isMounted = false; };
-  }, [groupId]);
+  }, [groupId, sharedThingsRefresh]);
 
-  async function toggleThingShared(thingId, currentlyShared) {
-    setThingsError(null);
-    if (currentlyShared) {
-      setSharedThingIds((prev) => prev.filter((id) => id !== thingId));
-      const { error: delErr } = await supabase
-        .from('things_to_groups')
-        .delete()
-        .eq('thing_id', thingId)
-        .eq('group_id', groupId);
-      if (delErr) {
-        setSharedThingIds((prev) => (prev.includes(thingId) ? prev : [...prev, thingId]));
-        setThingsError(delErr.message || 'Failed to update sharing.');
+  useEffect(() => {
+    if (!sharedThingIds.length) {
+      setSharedThingsList([]);
+      setSharedRequestsList([]);
+      setSharedItemsLoading(false);
+      return;
+    }
+    let isMounted = true;
+    setSharedItemsLoading(true);
+    (async () => {
+      try {
+        const { data, error: fetchError } = await supabase
+          .from('items')
+          .select('id, name, description, user_id, type')
+          .in('id', sharedThingIds);
+        if (fetchError) throw fetchError;
+        if (!isMounted) return;
+        const items = data ?? [];
+        setSharedThingsList(items.filter((i) => i.type === 'thing'));
+        setSharedRequestsList(items.filter((i) => i.type === 'request'));
+      } catch {
+        if (isMounted) {
+          setSharedThingsList([]);
+          setSharedRequestsList([]);
+        }
+      } finally {
+        if (isMounted) setSharedItemsLoading(false);
       }
-    } else {
-      setSharedThingIds((prev) => [...prev, thingId]);
-      const { error: insErr } = await supabase
-        .from('things_to_groups')
-        .insert({ thing_id: thingId, group_id: groupId });
-      if (insErr) {
-        setSharedThingIds((prev) => prev.filter((id) => id !== thingId));
-        setThingsError(insErr.message || 'Failed to update sharing.');
-      }
-    }
-  }
-
-  async function shareAllWithGroup() {
-    const toAdd = myThings.filter((t) => !sharedThingIds.includes(t.id));
-    if (toAdd.length === 0) return;
-    setThingsError(null);
-    setShareAllBusy(true);
-    const previousIds = sharedThingIds;
-    setSharedThingIds((prev) => [...prev, ...toAdd.map((t) => t.id)]);
-    try {
-      const { error: insErr } = await supabase.from('things_to_groups').insert(
-        toAdd.map((t) => ({ thing_id: t.id, group_id: groupId }))
-      );
-      if (insErr) throw insErr;
-    } catch (err) {
-      setSharedThingIds(previousIds);
-      setThingsError(err.message || 'Failed to share all.');
-    } finally {
-      setShareAllBusy(false);
-    }
-  }
-
-  async function shareAllRequestsWithGroup() {
-    const toAdd = myRequests.filter((r) => !sharedThingIds.includes(r.id));
-    if (toAdd.length === 0) return;
-    setThingsError(null);
-    setShareAllBusy(true);
-    const previousIds = sharedThingIds;
-    setSharedThingIds((prev) => [...prev, ...toAdd.map((r) => r.id)]);
-    try {
-      const { error: insErr } = await supabase.from('things_to_groups').insert(
-        toAdd.map((r) => ({ thing_id: r.id, group_id: groupId }))
-      );
-      if (insErr) throw insErr;
-    } catch (err) {
-      setSharedThingIds(previousIds);
-      setThingsError(err.message || 'Failed to share all requests.');
-    } finally {
-      setShareAllBusy(false);
-    }
-  }
+    })();
+    return () => { isMounted = false; };
+  }, [sharedThingIds]);
 
   async function copyInviteLink() {
     if (!group?.invite_token) return;
@@ -273,7 +250,8 @@ function GroupDetailPage({ user }) {
       >
         ← Back
       </button>
-      <div className="group-detail-header">
+      <div className="group-detail-info-box">
+        <div className="group-detail-header">
         {editingGroup ? (
           <form onSubmit={handleEditSave} className="group-edit-form" aria-label="Edit group">
             {editError && <p className="form-error" role="alert">{editError}</p>}
@@ -352,13 +330,56 @@ function GroupDetailPage({ user }) {
               </div>
             </div>
             {group.description && <p className="group-detail-description">{group.description}</p>}
-            <p className="group-detail-summary">
-              {membersLoading ? '…' : members.length} users sharing {sharedThingsLoading ? '…' : sharedThingIds.length} items
-            </p>
           </>
         )}
       </div>
       {error && <p className="form-error" role="alert">{error}</p>}
+
+      <section className="group-detail-members" aria-label="Members">
+        <button
+          type="button"
+          className="group-detail-members-toggle"
+          onClick={() => setMembersExpanded((v) => !v)}
+          aria-expanded={membersExpanded}
+          aria-controls="group-detail-members-content"
+        >
+          <span className="group-detail-members-toggle-icon" aria-hidden="true">
+            {membersExpanded ? '▼' : '▶'}
+          </span>
+          <h3 className="map-section-title group-detail-members-toggle-title">
+            {membersLoading ? '…' : members.length} users
+          </h3>
+        </button>
+        <div
+          id="group-detail-members-content"
+          className="group-detail-members-content"
+          hidden={!membersExpanded}
+        >
+          {membersLoading && <p className="status">Loading members…</p>}
+          {membersError && <p className="status error">{membersError}</p>}
+          {!membersLoading && !membersError && (
+            <ul className="group-members-list">
+              {members.map((m) => (
+                <li key={m.user_id}>
+                  <div className="member-main">
+                    <button
+                      type="button"
+                      className="member-name member-name-button"
+                      onClick={() => navigate(`/user/${m.user_id}`)}
+                    >
+                      {m.full_name || '<new user>'}
+                    </button>
+                    {m.user_id === user?.id && (
+                      <span className="member-you-badge">You</span>
+                    )}
+                  </div>
+                  <span className="member-role">{m.role}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </section>
 
       {group.latitude != null && group.longitude != null && Number.isFinite(group.latitude) && Number.isFinite(group.longitude) && !editingGroup && (
         <section className="group-detail-location" aria-label="Location">
@@ -397,139 +418,178 @@ function GroupDetailPage({ user }) {
       )}
 
       <section className="group-detail-invite" aria-label="Invite link">
-        <h3 className="map-section-title">Invite link</h3>
-        <p className="group-invite-hint">Anyone with this link can join.</p>
         <button type="button" className="header-button" onClick={copyInviteLink}>
           {inviteCopied ? 'Copied!' : 'Copy invite link'}
         </button>
+        <p className="group-invite-hint">Anyone with this link can join.</p>
+      </section>
+      </div>
+
+      <section className="group-detail-your-sharing" aria-label="Your sharing">
+        {myThingsError && <p className="status error">{myThingsError}</p>}
+        {myRequestsError && <p className="status error">{myRequestsError}</p>}
+        {thingsError && <p className="status error" role="alert">{thingsError}</p>}
+        <div className="group-detail-sharing-block">
+          <h4 className="group-detail-sharing-subtitle">
+            You're sharing {myThingsLoading ? '…' : myThings.filter((t) => sharedThingIds.includes(t.id)).length}/
+            {myThingsLoading ? '…' : myThings.length} things
+          </h4>
+          <div className="group-detail-sharing-actions">
+            <button
+              type="button"
+              className="header-button"
+              onClick={() => user?.id && setAddThingModalOpen(true)}
+              disabled={!user?.id}
+            >
+              + Add new thing
+            </button>
+            <button
+              type="button"
+              className="header-button"
+              onClick={() => user?.id && setEditThingsSharingOpen(true)}
+              disabled={!user?.id}
+            >
+              View/edit shared things
+            </button>
+          </div>
+        </div>
+        <div className="group-detail-sharing-block">
+          <h4 className="group-detail-sharing-subtitle">
+            You're sharing {myRequestsLoading ? '…' : myRequests.filter((r) => sharedThingIds.includes(r.id)).length}/
+            {myRequestsLoading ? '…' : myRequests.length} requests
+          </h4>
+          <div className="group-detail-sharing-actions">
+            <button
+              type="button"
+              className="header-button"
+              onClick={() => user?.id && setAddRequestModalOpen(true)}
+              disabled={!user?.id}
+            >
+              + Add new request
+            </button>
+            <button
+              type="button"
+              className="header-button"
+              onClick={() => user?.id && setEditRequestsSharingOpen(true)}
+              disabled={!user?.id}
+            >
+              View/edit shared requests
+            </button>
+          </div>
+        </div>
       </section>
 
-      <section className="group-detail-members" aria-label="Members">
-        <h3 className="map-section-title">Members</h3>
-        {membersLoading && <p className="status">Loading members…</p>}
-        {membersError && <p className="status error">{membersError}</p>}
-        {!membersLoading && !membersError && (
-          <ul className="group-members-list">
-            {members.map((m) => (
-              <li key={m.user_id}>
-                <div className="member-main">
-                  <button
-                    type="button"
-                    className="member-name member-name-button"
-                    onClick={() => navigate(`/user/${m.user_id}`)}
-                  >
-                    {m.full_name || '<new user>'}
-                  </button>
-                  {m.user_id === user?.id && (
-                    <span className="member-you-badge">You</span>
+      <section className="group-detail-shared-things" aria-label="Things shared in group">
+        <h3 className="map-section-title">
+          {sharedItemsLoading || sharedThingsLoading ? '…' : sharedThingsList.length} Things
+        </h3>
+        {sharedItemsLoading && sharedThingIds.length > 0 && <p className="status">Loading things…</p>}
+        {!sharedItemsLoading && sharedThingsList.length === 0 && (
+          <p className="status">No things shared with this group yet.</p>
+        )}
+        {!sharedItemsLoading && sharedThingsList.length > 0 && (
+          <ul className="things-list group-detail-shared-list" aria-label="Things">
+            {sharedThingsList.map((thing) => (
+              <li key={thing.id}>
+                <button
+                  type="button"
+                  className="thing-card thing-card-clickable"
+                  onClick={() => navigate(`/thing/${thing.id}`, { state: { thing } })}
+                >
+                  <div className="thing-card-title-row">
+                    <div className="thing-name">{thing.name}</div>
+                    {user?.id && thing.user_id === user.id && (
+                      <span className="item-yours-badge" aria-label="Your item">Yours</span>
+                    )}
+                  </div>
+                  {thing.description && (
+                    <div className="thing-description">{thing.description}</div>
                   )}
-                </div>
-                <span className="member-role">{m.role}</span>
+                </button>
               </li>
             ))}
           </ul>
         )}
       </section>
 
-      <section className="group-detail-your-things" aria-label="Your things in this group">
-        <h3 className="map-section-title">Your things</h3>
-        <p className="group-things-hint">Share items with this group so members can see them.</p>
-        {myThingsLoading && <p className="status">Loading your things…</p>}
-        {myThingsError && <p className="status error">{myThingsError}</p>}
-        {thingsError && <p className="status error" role="alert">{thingsError}</p>}
-        {!myThingsLoading && !myThingsError && (
-          <>
-            {myThings.length > 0 && (
-              <div className="group-detail-share-all-row">
+      <section className="group-detail-shared-requests" aria-label="Requests shared in group">
+        <h3 className="map-section-title">
+          {sharedItemsLoading || sharedThingsLoading ? '…' : sharedRequestsList.length} Requests
+        </h3>
+        {sharedItemsLoading && sharedThingIds.length > 0 && <p className="status">Loading requests…</p>}
+        {!sharedItemsLoading && sharedRequestsList.length === 0 && (
+          <p className="status">No requests shared with this group yet.</p>
+        )}
+        {!sharedItemsLoading && sharedRequestsList.length > 0 && (
+          <ul className="things-list group-detail-shared-list" aria-label="Requests">
+            {sharedRequestsList.map((request) => (
+              <li key={request.id}>
                 <button
                   type="button"
-                  className="header-button"
-                  onClick={shareAllWithGroup}
-                  disabled={shareAllBusy || sharedThingsLoading || myThings.every((t) => sharedThingIds.includes(t.id))}
+                  className="thing-card thing-card-clickable"
+                  onClick={() => navigate(`/thing/${request.id}`, { state: { thing: request } })}
                 >
-                  {shareAllBusy ? 'Sharing…' : 'Share all'}
+                  <div className="thing-card-title-row">
+                    <div className="thing-name">{request.name}</div>
+                    {user?.id && request.user_id === user.id && (
+                      <span className="item-yours-badge" aria-label="Your item">Yours</span>
+                    )}
+                  </div>
+                  {request.description && (
+                    <div className="thing-description">{request.description}</div>
+                  )}
                 </button>
-              </div>
-            )}
-            {sharedThingsLoading && myThings.length > 0 && <p className="status">Loading sharing…</p>}
-            {!sharedThingsLoading && (
-              <ul className="group-detail-things-list">
-                {myThings.map((thing) => (
-                  <li key={thing.id} className="group-detail-thing-row">
-                    <input
-                      type="checkbox"
-                      id={`group-thing-${thing.id}`}
-                      className="group-detail-thing-checkbox"
-                      checked={sharedThingIds.includes(thing.id)}
-                      onChange={() => toggleThingShared(thing.id, sharedThingIds.includes(thing.id))}
-                      disabled={sharedThingsLoading}
-                      aria-label={`Share "${thing.name ?? 'Untitled'}" with group`}
-                    />
-                    <label htmlFor={`group-thing-${thing.id}`} className="group-detail-thing-label">
-                      {thing.name || 'Untitled'}
-                    </label>
-                  </li>
-                ))}
-              </ul>
-            )}
-            {!myThingsLoading && myThings.length === 0 && (
-              <p className="status">You have no things yet. Add items from the map or My things.</p>
-            )}
-          </>
+              </li>
+            ))}
+          </ul>
         )}
       </section>
 
-      <section className="group-detail-your-things" aria-label="Your requests in this group">
-        <h3 className="map-section-title">Your requests</h3>
-        <p className="group-things-hint">Share your requests with this group so members can see them.</p>
-        {myRequestsLoading && <p className="status">Loading your requests…</p>}
-        {myRequestsError && <p className="status error">{myRequestsError}</p>}
-        {thingsError && <p className="status error" role="alert">{thingsError}</p>}
-        {!myRequestsLoading && !myRequestsError && (
-          <>
-            {myRequests.length > 0 && (
-              <div className="group-detail-share-all-row">
-                <button
-                  type="button"
-                  className="header-button"
-                  onClick={shareAllRequestsWithGroup}
-                  disabled={
-                    shareAllBusy ||
-                    sharedThingsLoading ||
-                    myRequests.every((r) => sharedThingIds.includes(r.id))
-                  }
-                >
-                  {shareAllBusy ? 'Sharing…' : 'Share all requests'}
-                </button>
-              </div>
-            )}
-            {sharedThingsLoading && myRequests.length > 0 && <p className="status">Loading sharing…</p>}
-            {!sharedThingsLoading && (
-              <ul className="group-detail-things-list">
-                {myRequests.map((request) => (
-                  <li key={request.id} className="group-detail-thing-row">
-                    <input
-                      type="checkbox"
-                      id={`group-request-${request.id}`}
-                      className="group-detail-thing-checkbox"
-                      checked={sharedThingIds.includes(request.id)}
-                      onChange={() => toggleThingShared(request.id, sharedThingIds.includes(request.id))}
-                      disabled={sharedThingsLoading}
-                      aria-label={`Share request "${request.name ?? 'Untitled'}" with group`}
-                    />
-                    <label htmlFor={`group-request-${request.id}`} className="group-detail-thing-label">
-                      {request.name || 'Untitled'}
-                    </label>
-                  </li>
-                ))}
-              </ul>
-            )}
-            {!myRequestsLoading && myRequests.length === 0 && (
-              <p className="status">You have no requests yet.</p>
-            )}
-          </>
-        )}
-      </section>
+      {addThingModalOpen && (
+        <AddItemModal
+          type="thing"
+          userId={user?.id}
+          onSuccess={() => {
+            refetchMyThings();
+            setSharedThingsRefresh((r) => r + 1);
+            setAddThingModalOpen(false);
+          }}
+          onClose={() => setAddThingModalOpen(false)}
+        />
+      )}
+      {addRequestModalOpen && (
+        <AddItemModal
+          type="request"
+          userId={user?.id}
+          onSuccess={() => {
+            refetchMyRequests();
+            setSharedThingsRefresh((r) => r + 1);
+            setAddRequestModalOpen(false);
+          }}
+          onClose={() => setAddRequestModalOpen(false)}
+        />
+      )}
+
+      {editThingsSharingOpen && (
+        <EditGroupSharingModal
+          type="thing"
+          items={myThings}
+          sharedThingIds={sharedThingIds}
+          groupId={groupId}
+          onSave={() => setSharedThingsRefresh((r) => r + 1)}
+          onClose={() => setEditThingsSharingOpen(false)}
+        />
+      )}
+      {editRequestsSharingOpen && (
+        <EditGroupSharingModal
+          type="request"
+          items={myRequests}
+          sharedThingIds={sharedThingIds}
+          groupId={groupId}
+          onSave={() => setSharedThingsRefresh((r) => r + 1)}
+          onClose={() => setEditRequestsSharingOpen(false)}
+        />
+      )}
 
       {deleteConfirmOpen && (
         <div

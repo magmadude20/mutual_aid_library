@@ -3,15 +3,46 @@
 }
 
 .join-group-title {
-  margin: 0 0 0.5rem;
-  font-size: 1.25rem;
+  margin: 0 0 0.75rem;
+  font-size: 0.95rem;
   font-weight: 600;
 }
 
+.join-group-info {
+  margin-bottom: 1.25rem;
+}
+
 .join-group-name {
+  margin: 0 0 0.5rem;
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #e4e6eb;
+}
+
+.join-group-description {
   margin: 0 0 1rem;
-  font-size: 1.1rem;
+  font-size: 0.95rem;
   color: #b0b4bb;
+  line-height: 1.5;
+}
+
+.join-group-location {
+  margin-top: 1rem;
+}
+
+.join-group-location-title {
+  margin: 0 0 0.5rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #9ca3af;
+}
+
+.join-group-map-wrapper {
+  height: 200px;
+  width: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #3a3f47;
 }
 
 .join-group-hint {

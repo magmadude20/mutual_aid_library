@@ -1,0 +1,42 @@
+.add-item-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  z-index: 2000;
+}
+
+.add-item-modal-card {
+  background: #25282e;
+  border: 1px solid #3a3f47;
+  border-radius: 8px;
+  padding: 1.25rem 1.5rem;
+  max-width: 420px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.add-item-modal-title {
+  margin: 0 0 1rem;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.add-item-modal-form {
+  margin: 0;
+}
+
+.add-item-modal-form .add-thing-form-sharing {
+  margin-top: 1rem;
+}
+
+.add-item-modal-actions {
+  margin-top: 1.25rem;
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}

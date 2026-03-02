@@ -17,14 +17,8 @@ function UserDetailPage({
   setMyRequests,
   myRequestsLoading,
   myRequestsError,
-  showAddForm,
-  onShowAddForm,
-  addForm,
-  onAddSubmit,
-  showAddRequestForm,
-  onShowAddRequestForm,
-  addRequestForm,
-  onAddRequestSubmit,
+  onThingAdded,
+  onRequestAdded,
   onSelectThing,
   onSelectRequest,
 }) {
@@ -71,8 +65,8 @@ function UserDetailPage({
     setSaveMessage('');
     const nextFullName = editFullName.trim();
     const nextContactInfo = editContactInfo.trim();
-    if (!nextFullName || !nextContactInfo) {
-      setSaveError('Display name and contact info are required.');
+    if (!nextFullName) {
+      setSaveError('Display name is required.');
       return;
     }
     setSaving(true);
@@ -80,7 +74,7 @@ function UserDetailPage({
       const { error: upsertError } = await supabase.from('profiles').upsert({
         id: userId,
         full_name: nextFullName,
-        contact_info: nextContactInfo,
+        contact_info: nextContactInfo || null,
       });
       if (upsertError) throw upsertError;
       setSaveMessage('Profile saved.');
@@ -108,11 +102,6 @@ function UserDetailPage({
       setDeleteSubmitting(false);
     }
   }
-
-  const needsProfileSetup =
-    isSelf &&
-    (((fullName ?? '').toString().trim() === '') ||
-      ((contactInfo ?? '').toString().trim() === ''));
 
   if (profileLoading && !fullName && !profileError) {
     return (
@@ -148,10 +137,10 @@ function UserDetailPage({
                 <>
                   <button
                     type="button"
-                    className={`header-button user-detail-edit-btn${needsProfileSetup ? ' user-detail-edit-btn-setup' : ''}`}
+                    className="header-button user-detail-edit-btn"
                     onClick={() => setEditingProfile(true)}
                   >
-                    {needsProfileSetup ? 'Set up profile' : 'Edit'}
+                    Edit profile
                   </button>
                   <button
                     type="button"
@@ -181,7 +170,7 @@ function UserDetailPage({
               autoComplete="name"
               required
             />
-            <label className="form-label" htmlFor="user-edit-contact">Contact info</label>
+            <label className="form-label" htmlFor="user-edit-contact">Contact info (optional)</label>
             <p className="form-hint">
               How others can reach you (e.g. <a href="https://signal.org/blog/phone-number-privacy-usernames/" target="_blank" rel="noopener noreferrer">Signal username</a>)
             </p>
@@ -193,7 +182,6 @@ function UserDetailPage({
               placeholder="How others can reach you"
               rows={3}
               disabled={saving}
-              required
             />
             <div className="user-detail-edit-actions">
               <button type="submit" className="submit-button" disabled={saving}>
@@ -234,17 +222,11 @@ function UserDetailPage({
             setMyRequests={setMyRequests}
             myRequestsLoading={myRequestsLoading}
             myRequestsError={myRequestsError}
-            showAddForm={showAddForm}
-            onShowAddForm={onShowAddForm}
-            addForm={addForm}
-            onAddSubmit={onAddSubmit}
-            showAddRequestForm={showAddRequestForm}
-            onShowAddRequestForm={onShowAddRequestForm}
-            addRequestForm={addRequestForm}
-            onAddRequestSubmit={onAddRequestSubmit}
+            onThingAdded={onThingAdded}
+            onRequestAdded={onRequestAdded}
             onSelectThing={onSelectThing}
             onSelectRequest={onSelectRequest}
-            canAddItems={!needsProfileSetup}
+            canAddItems={true}
             activeTab={activeItemsTab}
             onTabChange={handleItemsTabChange}
           />

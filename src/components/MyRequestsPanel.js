@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useOwnerGroups } from '../hooks/useOwnerGroups';
 import { supabase } from '../lib/supabaseClient';
+import AddItemModal from './AddItemModal';
 import './MyThingsPanel.css';
 
 function MyRequestsPanel({
@@ -9,26 +10,12 @@ function MyRequestsPanel({
   setMyRequests,
   myRequestsLoading,
   myRequestsError,
-  showAddForm,
-  onShowAddForm,
-  addForm,
-  onAddSubmit,
+  onRequestAdded,
   onSelectRequest,
   canAddRequests = true,
   showTitle = true,
 }) {
-  const {
-    name,
-    description,
-    formError,
-    submitting,
-    sharingGroupIds,
-    onNameChange,
-    onDescriptionChange,
-    onToggleSharingGroup,
-    onCancelAdd,
-  } = addForm;
-
+  const [addModalOpen, setAddModalOpen] = useState(false);
   const [selectedIds, setSelectedIds] = useState([]);
   const [bulkModal, setBulkModal] = useState(null);
   const [bulkSharingGroupIds, setBulkSharingGroupIds] = useState([]);
@@ -154,12 +141,12 @@ function MyRequestsPanel({
         <button
           type="button"
           className="header-button my-things-add-button"
-          onClick={() => onShowAddForm(!showAddForm)}
-          disabled={submitting || !canAddRequests}
+          onClick={() => setAddModalOpen(true)}
+          disabled={!canAddRequests}
         >
-          {showAddForm ? 'Cancel' : '+ Add new request'}
+          + Add new request
         </button>
-        {!showAddForm && !myRequestsLoading && !myRequestsError && myRequests.length > 0 && (
+        {!myRequestsLoading && !myRequestsError && myRequests.length > 0 && (
           <div className="my-things-header-bulk-buttons">
             <button
               type="button"
@@ -178,89 +165,11 @@ function MyRequestsPanel({
           </div>
         )}
       </div>
-      {!canAddRequests && (
-        <p className="my-things-profile-warning" role="alert">
-          You need to add your name and contact info before adding any requests.
-        </p>
-      )}
       {myRequestsLoading && <p className="status">Loading your requests…</p>}
       {myRequestsError && (
         <p className="status error" role="alert">
           {myRequestsError}
         </p>
-      )}
-      {showAddForm && canAddRequests && (
-        <div className="my-things-add-form-wrapper">
-          <form className="add-thing-form" onSubmit={onAddSubmit} aria-label="Add request">
-            <h2 className="form-title">Add request</h2>
-            {formError && (
-              <p className="form-error" role="alert">
-                {formError}
-              </p>
-            )}
-            <label className="form-label" htmlFor="request-name">
-              Name
-            </label>
-            <input
-              id="request-name"
-              type="text"
-              className="form-input"
-              value={name}
-              onChange={(e) => onNameChange(e.target.value)}
-              placeholder="What are you looking for?"
-              required
-              disabled={submitting}
-              autoComplete="off"
-            />
-            <label className="form-label" htmlFor="request-description">
-              Description (optional)
-            </label>
-            <textarea
-              id="request-description"
-              className="form-input form-textarea"
-              value={description}
-              onChange={(e) => onDescriptionChange(e.target.value)}
-              placeholder="Description"
-              rows={3}
-              disabled={submitting}
-            />
-            <div className="add-thing-form-sharing">
-              <p className="add-thing-form-sharing-title">Sharing</p>
-              {!ownerGroupsLoading && ownerGroups?.length > 0 && (
-                <>
-                  <p className="add-thing-form-groups-label">Shared with groups:</p>
-                  {ownerGroups.map((g) => (
-                    <div key={g.id} className="form-checkbox-row">
-                      <input
-                        id={`add-request-group-${g.id}`}
-                        type="checkbox"
-                        checked={sharingGroupIds?.includes(g.id)}
-                        onChange={() => onToggleSharingGroup?.(g.id)}
-                        disabled={submitting}
-                      />
-                      <label className="form-label" htmlFor={`add-request-group-${g.id}`}>
-                        {g.name}
-                      </label>
-                    </div>
-                  ))}
-                </>
-              )}
-            </div>
-            <div className="add-thing-form-actions">
-              <button type="submit" className="submit-button" disabled={submitting}>
-                {submitting ? 'Adding…' : 'Add request'}
-              </button>
-              <button
-                type="button"
-                className="header-button"
-                onClick={onCancelAdd}
-                disabled={submitting}
-              >
-                Cancel
-              </button>
-            </div>
-          </form>
-        </div>
       )}
       {!myRequestsLoading && !myRequestsError && myRequests.length > 0 && (
         <>
@@ -327,7 +236,7 @@ function MyRequestsPanel({
           </ul>
         </>
       )}
-      {!myRequestsLoading && !myRequestsError && myRequests.length === 0 && !showAddForm && (
+      {!myRequestsLoading && !myRequestsError && myRequests.length === 0 && (
         <p className="status">You haven&apos;t added any requests yet.</p>
       )}
 
@@ -388,6 +297,18 @@ function MyRequestsPanel({
             </div>
           </div>
         </div>
+      )}
+
+      {addModalOpen && (
+        <AddItemModal
+          type="request"
+          userId={user?.id}
+          onSuccess={(data) => {
+            onRequestAdded?.(data);
+            setAddModalOpen(false);
+          }}
+          onClose={() => setAddModalOpen(false)}
+        />
       )}
     </div>
   );

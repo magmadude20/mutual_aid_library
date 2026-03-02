@@ -67,6 +67,9 @@ function Layout({ user, logout }) {
       <main className="App-main">
         <Outlet />
       </main>
+      <footer className="App-footer">
+        © 2026 Very Serious Business
+      </footer>
     </div>
   );
 }

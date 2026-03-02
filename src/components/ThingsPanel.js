@@ -168,7 +168,12 @@ function ThingsPanel({ user, things, loading, error, onSelectThing }) {
                 className="thing-card thing-card-clickable"
                 onClick={() => onSelectThing(thing)}
               >
-                <div className="thing-name">{thing.name}</div>
+                <div className="thing-card-title-row">
+                  <div className="thing-name">{thing.name}</div>
+                  {user?.id && thing.user_id === user.id && (
+                    <span className="item-yours-badge" aria-label="Your item">Yours</span>
+                  )}
+                </div>
                 {thing.description && (
                   <div className="thing-description">{thing.description}</div>
                 )}

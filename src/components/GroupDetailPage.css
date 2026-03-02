@@ -39,11 +39,28 @@
   margin-top: 1.5rem;
 }
 
+.group-detail-admin-actions-box {
+  margin-top: 1rem;
+  padding: 1rem 1.25rem;
+  background: #1f2329;
+  border: 1px solid #3a3f47;
+  border-radius: 8px;
+}
+
+.group-detail-admin-actions-label {
+  margin: 0 0 0.5rem;
+  font-size: 0.9rem;
+  color: #9ca3af;
+}
+
 .group-detail-admin-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
-  margin-top: 1rem;
+}
+
+.group-detail-admin-actions-box .group-detail-admin-actions {
+  margin-top: 0;
 }
 
 .group-detail-admin-actions .delete-button {

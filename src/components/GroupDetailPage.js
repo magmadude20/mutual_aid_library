@@ -415,13 +415,16 @@ function GroupDetailPage({ user }) {
       </section>
 
       {isAdmin && !editingGroup && (
-        <div className="group-detail-admin-actions">
-          <button type="button" className="header-button" onClick={startEditing}>
-            Edit group
-          </button>
-          <button type="button" className="header-button delete-button" onClick={() => setDeleteConfirmOpen(true)}>
-            Delete group
-          </button>
+        <div className="group-detail-admin-actions-box">
+          <p className="group-detail-admin-actions-label">Admin actions</p>
+          <div className="group-detail-admin-actions">
+            <button type="button" className="header-button" onClick={startEditing}>
+              Edit group
+            </button>
+            <button type="button" className="header-button delete-button" onClick={() => setDeleteConfirmOpen(true)}>
+              Delete group
+            </button>
+          </div>
         </div>
       )}
       </div>

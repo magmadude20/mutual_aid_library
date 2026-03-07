@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabaseClient';
 import Owner from './Owner';
 import { useOwnerGroups } from '../hooks/useOwnerGroups';
 import { useThingGroups } from '../hooks/useThingGroups';
+import { useUserProfile } from '../hooks/useUserProfile';
 import './ThingDetailPage.css';
 
 function ThingDetailPage({ thing, user, onBack, onThingUpdated, onThingDeleted }) {
@@ -16,11 +17,17 @@ function ThingDetailPage({ thing, user, onBack, onThingUpdated, onThingDeleted }
   const [deleteError, setDeleteError] = useState(null);
 
   const isOwner = thing.user_id === user?.id;
+  const { fullName: ownerName } = useUserProfile(thing.user_id);
   const { groups: ownerGroups, loading: ownerGroupsLoading } = useOwnerGroups(isOwner ? thing.user_id : null);
   const { groupIds: sharedGroupIds, refetch: refetchThingGroups } = useThingGroups(thing.id);
   const [sharingGroupIds, setSharingGroupIds] = useState([]);
   const [sharingSaving, setSharingSaving] = useState(false);
   const [sharingError, setSharingError] = useState(null);
+  const [requestModalOpen, setRequestModalOpen] = useState(false);
+  const [requestSubject, setRequestSubject] = useState('');
+  const [requestMessage, setRequestMessage] = useState('');
+  const [requestSending, setRequestSending] = useState(false);
+  const [requestError, setRequestError] = useState(null);
 
   useEffect(() => {
     setSharingGroupIds(sharedGroupIds);
@@ -141,6 +148,50 @@ function ThingDetailPage({ thing, user, onBack, onThingUpdated, onThingDeleted }
     }
   }
 
+  function openRequestModal() {
+    const defaultSubject =
+      thing.type === 'request'
+        ? `Re: your request "${thing.name || 'request'}"`
+        : `Request to borrow: ${thing.name || 'thing'}`;
+    const defaultMessage =
+      thing.type === 'request'
+        ? 'Hi, I can help with your request.'
+        : `Hi, I'd like to borrow your ${thing.name || 'item'}.`;
+    setRequestSubject(defaultSubject);
+    setRequestMessage(defaultMessage);
+    setRequestError(null);
+    setRequestModalOpen(true);
+  }
+
+  function closeRequestModal() {
+    setRequestModalOpen(false);
+    setRequestError(null);
+  }
+
+  async function handleSendRequest(e) {
+    e.preventDefault();
+    const subject = requestSubject.trim();
+    const message = requestMessage.trim();
+    if (!subject || !message) {
+      setRequestError('Subject and message are required.');
+      return;
+    }
+    setRequestError(null);
+    setRequestSending(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('send-request-email', {
+        body: { thing_id: thing.id, subject, message },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      closeRequestModal();
+    } catch (err) {
+      setRequestError(err.message || 'Failed to send message.');
+    } finally {
+      setRequestSending(false);
+    }
+  }
+
   return (
     <div className="thing-detail-page">
       <div className="thing-detail-actions">
@@ -151,6 +202,7 @@ function ThingDetailPage({ thing, user, onBack, onThingUpdated, onThingDeleted }
             setEditingThing(false);
             setDeleteConfirmOpen(false);
             setDeleteError(null);
+            closeRequestModal();
             onBack();
           }}
         >
@@ -278,6 +330,19 @@ function ThingDetailPage({ thing, user, onBack, onThingUpdated, onThingDeleted }
           </div>
         </section>
       )}
+      {!isOwner && user?.id && !editingThing && (
+        <div className="thing-detail-request-contact">
+          <button
+            type="button"
+            className="header-button thing-detail-request-btn"
+            onClick={openRequestModal}
+          >
+            {thing.type === 'request'
+              ? `Contact ${ownerName || 'owner'}`
+              : 'Request thing'}
+          </button>
+        </div>
+      )}
       <Owner userId={thing.user_id} />
       {deleteConfirmOpen && (
         <div
@@ -319,6 +384,69 @@ function ThingDetailPage({ thing, user, onBack, onThingUpdated, onThingDeleted }
                 {deleteSubmitting ? 'Deleting…' : 'Delete'}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+      {requestModalOpen && (
+        <div
+          className="modal-overlay"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="request-modal-title"
+        >
+          <div className="modal-card thing-detail-request-modal">
+            <h3 id="request-modal-title" className="modal-title">
+              {thing.type === 'request' ? 'Contact owner' : 'Request thing'}
+            </h3>
+            <form onSubmit={handleSendRequest}>
+              {requestError && (
+                <p className="form-error modal-error" role="alert">
+                  {requestError}
+                </p>
+              )}
+              <label className="form-label" htmlFor="request-subject">
+                Subject
+              </label>
+              <input
+                id="request-subject"
+                type="text"
+                className="form-input"
+                value={requestSubject}
+                onChange={(e) => setRequestSubject(e.target.value)}
+                placeholder="Subject"
+                disabled={requestSending}
+                autoComplete="off"
+              />
+              <label className="form-label" htmlFor="request-message">
+                Message
+              </label>
+              <textarea
+                id="request-message"
+                className="form-input form-textarea"
+                value={requestMessage}
+                onChange={(e) => setRequestMessage(e.target.value)}
+                placeholder="Message"
+                rows={4}
+                disabled={requestSending}
+              />
+              <div className="modal-actions thing-detail-request-actions">
+                <button
+                  type="button"
+                  className="header-button"
+                  onClick={closeRequestModal}
+                  disabled={requestSending}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="submit-button"
+                  disabled={requestSending}
+                >
+                  {requestSending ? 'Sending…' : 'Send'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

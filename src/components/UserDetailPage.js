@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabaseClient';
 import { useUserProfile } from '../hooks/useUserProfile';
 import { useUserVisibleThings } from '../hooks/useUserVisibleThings';
 import { useUserVisibleRequests } from '../hooks/useUserVisibleRequests';
+import { useMyGroups } from '../hooks/useMyGroups';
 import MyItemsPanel from './MyItemsPanel';
 import './UserDetailPage.css';
 
@@ -26,6 +27,9 @@ function UserDetailPage({
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const activeItemsTab = searchParams.get('tab') === 'requests' ? 'requests' : 'things';
+  const { groups: userGroups, loading: userGroupsLoading, error: userGroupsError } = useMyGroups(userId);
+  const { groups: myGroups } = useMyGroups(user?.id);
+  const myGroupIds = new Set((myGroups ?? []).map((g) => g.id));
 
   function handleItemsTabChange(tab) {
     if (tab === 'requests') {
@@ -49,6 +53,7 @@ function UserDetailPage({
   const [deleteError, setDeleteError] = useState(null);
 
   const isSelf = user?.id === userId;
+  const [groupsExpanded, setGroupsExpanded] = useState(false);
 
   useEffect(() => {
     if (editingProfile) {
@@ -209,6 +214,63 @@ function UserDetailPage({
           </p>
         )}
       </header>
+
+      <section className="user-detail-groups" aria-label="Groups">
+        <button
+          type="button"
+          className="user-detail-groups-toggle"
+          onClick={() => setGroupsExpanded((v) => !v)}
+          aria-expanded={groupsExpanded}
+          aria-controls="user-detail-groups-content"
+        >
+          <span className="user-detail-groups-toggle-icon" aria-hidden="true">
+            {groupsExpanded ? '▼' : '▶'}
+          </span>
+          <span className="user-detail-groups-toggle-title">
+            {userGroupsLoading
+              ? 'Member of … groups'
+              : `Member of ${userGroups.length} group${userGroups.length === 1 ? '' : 's'}`}
+          </span>
+        </button>
+        <div
+          id="user-detail-groups-content"
+          className="user-detail-groups-content"
+          hidden={!groupsExpanded}
+        >
+          {userGroupsLoading && <p className="status">Loading groups…</p>}
+          {userGroupsError && (
+            <p className="status error" role="alert">
+              {userGroupsError}
+            </p>
+          )}
+          {!userGroupsLoading && !userGroupsError && userGroups.length === 0 && (
+            <p className="status">Not a member of any groups yet.</p>
+          )}
+          {!userGroupsLoading && !userGroupsError && userGroups.length > 0 && (
+            <ul className="user-detail-groups-list" aria-label="Groups">
+              {userGroups.map((g) => (
+                <li key={g.id} className="user-detail-group-item">
+                  <button
+                    type="button"
+                    className="user-detail-group-item-button"
+                    onClick={() => navigate(`/groups/${g.id}`)}
+                  >
+                    <span className="user-detail-group-name">{g.name}</span>
+                    {!isSelf && myGroupIds.has(g.id) && (
+                      <span
+                        className="user-detail-group-mutual-badge"
+                        aria-label="You are both in this group"
+                      >
+                        Mutual
+                      </span>
+                    )}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </section>
 
       {isSelf && (
         <section className="user-detail-my-things-section" aria-label="My things and requests">

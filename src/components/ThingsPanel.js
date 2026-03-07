@@ -93,9 +93,8 @@ function ThingsPanel({ user, things, loading, error, onSelectThing }) {
             aria-expanded={filtersExpanded}
             aria-controls="things-panel-filters-content"
           >
-            <span className="things-panel-filters-toggle-label">Sort and filter</span>
-            <span className="things-panel-filters-toggle-icon" aria-hidden="true">
-              {filtersExpanded ? '▼' : '▶'}
+            <span className="things-panel-filters-toggle-label">
+              {filtersExpanded ? '▼' : '▶'} Sort and filter
             </span>
           </button>
           <div

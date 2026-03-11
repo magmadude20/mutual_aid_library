@@ -11,6 +11,8 @@ function JoinGroupPage({ user }) {
   const [loading, setLoading] = useState(true);
   const [joining, setJoining] = useState(false);
   const [error, setError] = useState(null);
+  const [message, setMessage] = useState('');
+  const [savingMessage, setSavingMessage] = useState(false);
 
   useEffect(() => {
     if (!inviteToken) return;
@@ -24,6 +26,9 @@ function JoinGroupPage({ user }) {
         if (rpcError) throw rpcError;
         const row = Array.isArray(data) ? data[0] : data;
         setGroup(row ?? null);
+        if (row?.pending_request_message) {
+          setMessage(row.pending_request_message);
+        }
       } catch (err) {
         if (!isMounted) return;
         setError(err.message || 'Failed to load group.');
@@ -43,6 +48,17 @@ function JoinGroupPage({ user }) {
         invite_token_param: inviteToken,
       });
       if (rpcError) throw rpcError;
+      // If this group requires approval and we're creating a new pending request,
+      // persist the message on the newly created membership_request row.
+      const trimmed = message.trim();
+      if (group?.requires_approval && !group?.pending_request_id && trimmed) {
+        await supabase
+          .from('membership_requests')
+          .update({ message: trimmed })
+          .eq('group_id', groupId)
+          .eq('user_id', user.id)
+          .eq('status', 'PENDING');
+      }
       setJoining(false);
       navigate(`/groups/${groupId}`, { replace: true });
     } catch (err) {
@@ -84,6 +100,8 @@ function JoinGroupPage({ user }) {
   }
 
   const alreadyMember = group.already_member === true;
+  const requiresApproval = group.requires_approval === true;
+  const hasPendingRequest = !!group.pending_request_id;
   const hasLocation =
     group.latitude != null &&
     group.longitude != null &&
@@ -128,6 +146,68 @@ function JoinGroupPage({ user }) {
           >
             Go to group
           </button>
+        </>
+      ) : requiresApproval ? (
+        <>
+          {hasPendingRequest ? (
+            <>
+              <p className="join-group-hint">Your application to join this group is pending.</p>
+              <label className="form-label" htmlFor="join-message">Message to admins (optional)</label>
+              <textarea
+                id="join-message"
+                className="form-input form-textarea"
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                rows={3}
+                disabled={savingMessage}
+              />
+              <button
+                type="button"
+                className="submit-button"
+                onClick={async () => {
+                  if (!group.pending_request_id) return;
+                  setSavingMessage(true);
+                  setError(null);
+                  try {
+                    const { error: updateError } = await supabase
+                      .from('membership_requests')
+                      .update({ message: message.trim() || null })
+                      .eq('id', group.pending_request_id);
+                    if (updateError) throw updateError;
+                  } catch (err) {
+                    setError(err.message || 'Failed to update message.');
+                  } finally {
+                    setSavingMessage(false);
+                  }
+                }}
+              >
+                {savingMessage ? 'Saving…' : 'Update message'}
+              </button>
+            </>
+          ) : (
+            <>
+              <p className="join-group-hint">
+                This group requires admin approval to join. Submit a request below.
+              </p>
+              <label className="form-label" htmlFor="join-message">Message to admins (optional)</label>
+              <textarea
+                id="join-message"
+                className="form-input form-textarea"
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                rows={3}
+                disabled={joining}
+              />
+              <button
+                type="button"
+                className="submit-button"
+                onClick={handleJoin}
+                disabled={joining}
+              >
+                {joining ? 'Submitting…' : 'Request to join'}
+              </button>
+            </>
+          )}
         </>
       ) : (
         <button

@@ -10,6 +10,7 @@ function CreateGroupPage({ user }) {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [isPublic, setIsPublic] = useState(true);
+  const [requiresApproval, setRequiresApproval] = useState(false);
   const [latitude, setLatitude] = useState(null);
   const [longitude, setLongitude] = useState(null);
   const [error, setError] = useState(null);
@@ -36,6 +37,7 @@ function CreateGroupPage({ user }) {
           name: trimmedName,
           description: description.trim() || null,
           is_public: isPublic,
+          requires_approval: requiresApproval,
           invite_token: inviteToken,
           created_by: user.id,
           latitude,
@@ -115,6 +117,18 @@ function CreateGroupPage({ user }) {
           />
           <label className="form-label" htmlFor="group-is-public">
             Public (show in Browse public groups)
+          </label>
+        </div>
+        <div className="form-checkbox-row">
+          <input
+            id="group-requires-approval"
+            type="checkbox"
+            checked={requiresApproval}
+            onChange={(e) => setRequiresApproval(e.target.checked)}
+            disabled={submitting}
+          />
+          <label className="form-label" htmlFor="group-requires-approval">
+            Require admin approval to join
           </label>
         </div>
         <div className="create-group-actions">

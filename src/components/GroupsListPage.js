@@ -1,6 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { supabase } from '../lib/supabaseClient';
+import { Link } from 'react-router-dom';
 import { useMyGroups } from '../hooks/useMyGroups';
 import { usePublicGroups } from '../hooks/usePublicGroups';
 import { useGroupCounts } from '../hooks/useGroupCounts';
@@ -8,7 +7,6 @@ import Map from './Map';
 import './GroupsListPage.css';
 
 function GroupsListPage({ user }) {
-  const navigate = useNavigate();
   const { groups, loading, error } = useMyGroups(user?.id);
   const { publicGroups, loading: publicLoading, error: publicError } = usePublicGroups(user?.id);
   const allGroupIds = useMemo(
@@ -16,21 +14,7 @@ function GroupsListPage({ user }) {
     [groups, publicGroups]
   );
   const { memberCountByGroupId, thingCountByGroupId } = useGroupCounts(allGroupIds);
-  const [joiningId, setJoiningId] = useState(null);
   const [joinError, setJoinError] = useState(null);
-
-  async function handleJoinPublic(inviteToken, groupId) {
-    setJoiningId(groupId);
-    setJoinError(null);
-    try {
-      await supabase.rpc('join_group_by_token', { invite_token_param: inviteToken });
-      navigate(`/groups/${groupId}`, { replace: true });
-    } catch (err) {
-      setJoinError(err.message || 'Failed to join.');
-    } finally {
-      setJoiningId(null);
-    }
-  }
 
   return (
     <div className="groups-list-page">
@@ -93,21 +77,13 @@ function GroupsListPage({ user }) {
           <ul className="groups-list">
             {publicGroups.map((g) => (
               <li key={g.id}>
-                <div className="group-card">
+                <Link to={`/join/${g.invite_token}`} className="group-card group-card-link">
                   <span className="group-name">{g.name}</span>
                   {g.description && <span className="group-description">{g.description}</span>}
                   <span className="group-card-summary">
                     {memberCountByGroupId[g.id] ?? 0} users sharing {thingCountByGroupId[g.id] ?? 0} items
                   </span>
-                </div>
-                <button
-                  type="button"
-                  className="submit-button"
-                  onClick={() => handleJoinPublic(g.invite_token, g.id)}
-                  disabled={joiningId === g.id}
-                >
-                  {joiningId === g.id ? 'Joining…' : 'Join'}
-                </button>
+                </Link>
               </li>
             ))}
           </ul>

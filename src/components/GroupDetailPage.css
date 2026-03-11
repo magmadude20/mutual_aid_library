@@ -471,3 +471,43 @@
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+/* Pending membership requests list styling (match other lists) */
+.pending-requests-list {
+  list-style: none;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.pending-request-item {
+  background: #25282e;
+  border: 1px solid #3a3f47;
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.pending-request-main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.pending-request-message {
+  margin: 0;
+  font-size: 0.875rem;
+  color: #b0b4bb;
+  line-height: 1.4;
+}
+
+.pending-request-actions {
+  display: flex;
+  justify-content: flex-start;
+  gap: 0.5rem;
+  margin-top: 0.35rem;
+}

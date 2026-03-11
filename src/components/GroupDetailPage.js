@@ -25,6 +25,7 @@ function GroupDetailPage({ user }) {
   const [editName, setEditName] = useState('');
   const [editDescription, setEditDescription] = useState('');
   const [editIsPublic, setEditIsPublic] = useState(true);
+  const [editRequiresApproval, setEditRequiresApproval] = useState(false);
   const [editLatitude, setEditLatitude] = useState(DEFAULT_LAT);
   const [editLongitude, setEditLongitude] = useState(DEFAULT_LNG);
   const [editError, setEditError] = useState(null);
@@ -35,6 +36,11 @@ function GroupDetailPage({ user }) {
   const [locationExpanded, setLocationExpanded] = useState(false);
   const [membersExpanded, setMembersExpanded] = useState(false);
   const [inviteCopied, setInviteCopied] = useState(false);
+  const [pendingCount, setPendingCount] = useState(0);
+  const [pendingLoading, setPendingLoading] = useState(false);
+  const [pendingError, setPendingError] = useState(null);
+  const [pendingModalOpen, setPendingModalOpen] = useState(false);
+  const [pendingRequests, setPendingRequests] = useState([]);
   const [sharedThingIds, setSharedThingIds] = useState([]);
   const [sharedThingsLoading, setSharedThingsLoading] = useState(false);
   const [sharedThingsRefresh, setSharedThingsRefresh] = useState(0);
@@ -49,6 +55,7 @@ function GroupDetailPage({ user }) {
   const { members, loading: membersLoading, error: membersError } = useGroupMembers(groupId);
   const { myThings, loading: myThingsLoading, error: myThingsError, refetch: refetchMyThings } = useMyThings(user?.id);
   const { myRequests, loading: myRequestsLoading, error: myRequestsError, refetch: refetchMyRequests } = useMyRequests(user?.id);
+  const isAdmin = myRole === 'ADMIN';
 
   useEffect(() => {
     if (!groupId || !user?.id) return;
@@ -57,7 +64,7 @@ function GroupDetailPage({ user }) {
       try {
         const { data: g, error: gError } = await supabase
           .from('groups')
-          .select('id, name, description, is_public, invite_token, latitude, longitude')
+          .select('id, name, description, is_public, requires_approval, invite_token, latitude, longitude')
           .eq('id', groupId)
           .maybeSingle();
         if (!isMounted) return;
@@ -84,6 +91,137 @@ function GroupDetailPage({ user }) {
     })();
     return () => { isMounted = false; };
   }, [groupId, user?.id]);
+
+  // Redirect non-members to join page
+  useEffect(() => {
+    if (!group || loading) return;
+    if (!myRole) {
+      navigate(`/join/${group.invite_token}`, { replace: true });
+    }
+  }, [group, myRole, loading, navigate]);
+
+  // Load pending membership request count/list for admins
+  useEffect(() => {
+    if (!groupId || !isAdmin) return;
+    let isMounted = true;
+    (async () => {
+      try {
+        setPendingLoading(true);
+        setPendingError(null);
+        const { data, error: fetchError } = await supabase
+          .from('membership_requests')
+          .select('id, user_id, message, created_at')
+          .eq('group_id', groupId)
+          .eq('status', 'PENDING')
+          .order('created_at', { ascending: true });
+        if (fetchError) throw fetchError;
+        if (!isMounted) return;
+
+        const rows = data ?? [];
+        let requestsWithNames = rows;
+        if (rows.length > 0) {
+          const userIds = Array.from(new Set(rows.map((r) => r.user_id).filter(Boolean)));
+          if (userIds.length > 0) {
+            const { data: profiles } = await supabase
+              .from('profiles')
+              .select('id, full_name')
+              .in('id', userIds);
+            const nameById = {};
+            (profiles ?? []).forEach((p) => {
+              nameById[p.id] = p.full_name;
+            });
+            requestsWithNames = rows.map((r) => ({
+              ...r,
+              user_full_name: nameById[r.user_id] || null,
+            }));
+          }
+        }
+
+        setPendingRequests(requestsWithNames);
+        setPendingCount(requestsWithNames.length);
+      } catch (err) {
+        if (!isMounted) return;
+        setPendingError(err.message || 'Failed to load membership requests.');
+      } finally {
+        if (!isMounted) return;
+        setPendingLoading(false);
+      }
+    })();
+    return () => {
+      isMounted = false;
+    };
+  }, [groupId, isAdmin]);
+
+  async function handleApproveRequest(id) {
+    try {
+      await supabase.rpc('approve_membership_request', { p_request_id: id });
+      // Refresh list
+      const { data } = await supabase
+        .from('membership_requests')
+        .select('id, user_id, message, created_at')
+        .eq('group_id', groupId)
+        .eq('status', 'PENDING')
+        .order('created_at', { ascending: true });
+      const rows = data ?? [];
+      let requestsWithNames = rows;
+      if (rows.length > 0) {
+        const userIds = Array.from(new Set(rows.map((r) => r.user_id).filter(Boolean)));
+        if (userIds.length > 0) {
+          const { data: profiles } = await supabase
+            .from('profiles')
+            .select('id, full_name')
+            .in('id', userIds);
+          const nameById = {};
+          (profiles ?? []).forEach((p) => {
+            nameById[p.id] = p.full_name;
+          });
+          requestsWithNames = rows.map((r) => ({
+            ...r,
+            user_full_name: nameById[r.user_id] || null,
+          }));
+        }
+      }
+      setPendingRequests(requestsWithNames);
+      setPendingCount(requestsWithNames.length);
+    } catch (err) {
+      setPendingError(err.message || 'Failed to approve request.');
+    }
+  }
+
+  async function handleDenyRequest(id) {
+    try {
+      await supabase.rpc('deny_membership_request', { p_request_id: id });
+      const { data } = await supabase
+        .from('membership_requests')
+        .select('id, user_id, message, created_at')
+        .eq('group_id', groupId)
+        .eq('status', 'PENDING')
+        .order('created_at', { ascending: true });
+      const rows = data ?? [];
+      let requestsWithNames = rows;
+      if (rows.length > 0) {
+        const userIds = Array.from(new Set(rows.map((r) => r.user_id).filter(Boolean)));
+        if (userIds.length > 0) {
+          const { data: profiles } = await supabase
+            .from('profiles')
+            .select('id, full_name')
+            .in('id', userIds);
+          const nameById = {};
+          (profiles ?? []).forEach((p) => {
+            nameById[p.id] = p.full_name;
+          });
+          requestsWithNames = rows.map((r) => ({
+            ...r,
+            user_full_name: nameById[r.user_id] || null,
+          }));
+        }
+      }
+      setPendingRequests(requestsWithNames);
+      setPendingCount(requestsWithNames.length);
+    } catch (err) {
+      setPendingError(err.message || 'Failed to deny request.');
+    }
+  }
 
   useEffect(() => {
     if (!groupId) return;
@@ -167,6 +305,7 @@ function GroupDetailPage({ user }) {
     setEditName(group.name ?? '');
     setEditDescription(group.description ?? '');
     setEditIsPublic(group.is_public !== false);
+    setEditRequiresApproval(group.requires_approval === true);
     setEditLatitude(
       group.latitude != null && Number.isFinite(group.latitude) ? group.latitude : DEFAULT_LAT
     );
@@ -198,11 +337,12 @@ function GroupDetailPage({ user }) {
           name: trimmedName,
           description: editDescription.trim() || null,
           is_public: editIsPublic,
+          requires_approval: editRequiresApproval,
           latitude: editLatitude,
           longitude: editLongitude,
         })
         .eq('id', groupId)
-        .select('id, name, description, is_public, invite_token, latitude, longitude')
+        .select('id, name, description, is_public, requires_approval, invite_token, latitude, longitude')
         .single();
       if (updateError) throw updateError;
       setGroup(data);
@@ -228,8 +368,6 @@ function GroupDetailPage({ user }) {
       setDeleteSubmitting(false);
     }
   }
-
-  const isAdmin = myRole === 'ADMIN';
 
   if (loading) return <div className="App-main"><p className="status">Loading…</p></div>;
   if (error && !group) return <div className="App-main"><p className="status error">{error}</p></div>;
@@ -286,6 +424,18 @@ function GroupDetailPage({ user }) {
                 disabled={editSubmitting}
               />
               <label className="form-label" htmlFor="group-edit-is-public">Public (show in Browse public groups)</label>
+            </div>
+            <div className="form-checkbox-row">
+              <input
+                id="group-edit-requires-approval"
+                type="checkbox"
+                checked={editRequiresApproval}
+                onChange={(e) => setEditRequiresApproval(e.target.checked)}
+                disabled={editSubmitting}
+              />
+              <label className="form-label" htmlFor="group-edit-requires-approval">
+                Require admin approval to join
+              </label>
             </div>
             <div className="form-map-section">
               <label className="form-label">Group location</label>
@@ -416,8 +566,24 @@ function GroupDetailPage({ user }) {
 
       {isAdmin && !editingGroup && (
         <div className="group-detail-admin-actions-box">
-          <p className="group-detail-admin-actions-label">Admin actions</p>
+          <p className="group-detail-admin-actions-label">
+            Admin actions
+            {pendingCount > 0 && !pendingLoading && (
+              <span className="group-detail-pending-count">
+                {' '}
+                · {pendingCount} pending membership request{pendingCount === 1 ? '' : 's'}
+              </span>
+            )}
+          </p>
           <div className="group-detail-admin-actions">
+            <button
+              type="button"
+              className={pendingCount > 0 ? 'header-button primary-button' : 'header-button'}
+              onClick={() => setPendingModalOpen(true)}
+              disabled={pendingLoading}
+            >
+              {pendingLoading ? 'Loading requests…' : 'Review membership requests'}
+            </button>
             <button type="button" className="header-button" onClick={startEditing}>
               Edit group
             </button>
@@ -631,6 +797,73 @@ function GroupDetailPage({ user }) {
                 disabled={deleteSubmitting}
               >
                 {deleteSubmitting ? 'Deleting…' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {pendingModalOpen && (
+        <div
+          className="modal-overlay"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="pending-requests-modal-title"
+        >
+          <div className="modal-card">
+            <h3 id="pending-requests-modal-title" className="modal-title">
+              Review membership requests
+            </h3>
+            {pendingError && (
+              <p className="form-error modal-error" role="alert">
+                {pendingError}
+              </p>
+            )}
+            {pendingLoading ? (
+              <p className="status">Loading…</p>
+            ) : pendingRequests.length === 0 ? (
+              <p className="status">No pending membership requests.</p>
+            ) : (
+              <ul className="pending-requests-list">
+                {pendingRequests.map((r) => (
+                  <li key={r.id} className="pending-request-item">
+                    <div className="pending-request-main">
+                      <button
+                        type="button"
+                        className="member-name member-name-button"
+                        onClick={() => navigate(`/user/${r.user_id}`)}
+                      >
+                        {r.user_full_name?.trim() || 'View user'}
+                      </button>
+                      {r.message && <p className="pending-request-message">{r.message}</p>}
+                    </div>
+                    <div className="pending-request-actions">
+                      <button
+                        type="button"
+                        className="header-button"
+                        onClick={() => handleApproveRequest(r.id)}
+                      >
+                        Approve
+                      </button>
+                      <button
+                        type="button"
+                        className="header-button delete-button"
+                        onClick={() => handleDenyRequest(r.id)}
+                      >
+                        Deny
+                      </button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+            <div className="modal-actions">
+              <button
+                type="button"
+                className="header-button"
+                onClick={() => setPendingModalOpen(false)}
+              >
+                Close
               </button>
             </div>
           </div>

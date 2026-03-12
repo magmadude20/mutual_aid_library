@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
 import { useGroupMembers } from '../hooks/useGroupMembers';
@@ -52,7 +52,13 @@ function GroupDetailPage({ user }) {
   const [addRequestModalOpen, setAddRequestModalOpen] = useState(false);
   const [editThingsSharingOpen, setEditThingsSharingOpen] = useState(false);
   const [editRequestsSharingOpen, setEditRequestsSharingOpen] = useState(false);
-  const { members, loading: membersLoading, error: membersError } = useGroupMembers(groupId);
+  const [memberMenuOpen, setMemberMenuOpen] = useState(null);
+  const [confirmMakeAdmin, setConfirmMakeAdmin] = useState(null);
+  const [confirmRemoveMember, setConfirmRemoveMember] = useState(null);
+  const [memberActionSubmitting, setMemberActionSubmitting] = useState(false);
+  const [memberActionError, setMemberActionError] = useState(null);
+  const memberMenuAnchorRef = useRef(null);
+  const { members, setMembers, loading: membersLoading, error: membersError, refetch: refetchMembers } = useGroupMembers(groupId);
   const { myThings, loading: myThingsLoading, error: myThingsError, refetch: refetchMyThings } = useMyThings(user?.id);
   const { myRequests, loading: myRequestsLoading, error: myRequestsError, refetch: refetchMyRequests } = useMyRequests(user?.id);
   const isAdmin = myRole === 'ADMIN';
@@ -220,6 +226,58 @@ function GroupDetailPage({ user }) {
       setPendingCount(requestsWithNames.length);
     } catch (err) {
       setPendingError(err.message || 'Failed to deny request.');
+    }
+  }
+
+  // Close member dropdown when clicking outside
+  useEffect(() => {
+    if (memberMenuOpen == null) return;
+    function handleClick(e) {
+      if (memberMenuAnchorRef.current && !memberMenuAnchorRef.current.contains(e.target)) {
+        setMemberMenuOpen(null);
+      }
+    }
+    document.addEventListener('click', handleClick);
+    return () => document.removeEventListener('click', handleClick);
+  }, [memberMenuOpen]);
+
+  async function handleMakeAdminConfirm() {
+    if (!confirmMakeAdmin?.userId || !groupId) return;
+    setMemberActionError(null);
+    setMemberActionSubmitting(true);
+    try {
+      const { error: updateError } = await supabase
+        .from('group_members')
+        .update({ role: 'ADMIN' })
+        .eq('group_id', groupId)
+        .eq('user_id', confirmMakeAdmin.userId);
+      if (updateError) throw updateError;
+      setConfirmMakeAdmin(null);
+      refetchMembers();
+    } catch (err) {
+      setMemberActionError(err.message || 'Failed to update role.');
+    } finally {
+      setMemberActionSubmitting(false);
+    }
+  }
+
+  async function handleRemoveMemberConfirm() {
+    if (!confirmRemoveMember?.userId || !groupId) return;
+    setMemberActionError(null);
+    setMemberActionSubmitting(true);
+    try {
+      const { error: deleteError } = await supabase
+        .from('group_members')
+        .delete()
+        .eq('group_id', groupId)
+        .eq('user_id', confirmRemoveMember.userId);
+      if (deleteError) throw deleteError;
+      setConfirmRemoveMember(null);
+      refetchMembers();
+    } catch (err) {
+      setMemberActionError(err.message || 'Failed to remove member.');
+    } finally {
+      setMemberActionSubmitting(false);
     }
   }
 
@@ -500,7 +558,7 @@ function GroupDetailPage({ user }) {
           {!membersLoading && !membersError && (
             <ul className="group-members-list">
               {members.map((m) => (
-                <li key={m.user_id}>
+                <li key={m.user_id} className="group-members-list-item">
                   <div className="member-main">
                     <button
                       type="button"
@@ -513,7 +571,59 @@ function GroupDetailPage({ user }) {
                       <span className="member-you-badge">You</span>
                     )}
                   </div>
-                  <span className="member-role">{m.role}</span>
+                  <div className="member-row-right">
+                    <span className="member-role">{m.role}</span>
+                    {isAdmin && m.user_id !== user?.id && (
+                      <div
+                        className="member-menu-wrapper"
+                        ref={memberMenuOpen === m.user_id ? memberMenuAnchorRef : null}
+                      >
+                        <button
+                          type="button"
+                          className="member-menu-trigger"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setMemberMenuOpen(memberMenuOpen === m.user_id ? null : m.user_id);
+                          }}
+                          aria-expanded={memberMenuOpen === m.user_id}
+                          aria-haspopup="true"
+                          aria-label={`Actions for ${m.full_name || 'member'}`}
+                        >
+                          ⋮
+                        </button>
+                        {memberMenuOpen === m.user_id && (
+                          <div className="member-menu-dropdown" role="menu">
+                            {m.role !== 'ADMIN' && (
+                              <button
+                                type="button"
+                                role="menuitem"
+                                className="member-menu-item"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setConfirmMakeAdmin({ userId: m.user_id, fullName: m.full_name || 'this user' });
+                                  setMemberMenuOpen(null);
+                                }}
+                              >
+                                Make admin
+                              </button>
+                            )}
+                            <button
+                              type="button"
+                              role="menuitem"
+                              className="member-menu-item member-menu-item-danger"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setConfirmRemoveMember({ userId: m.user_id, fullName: m.full_name || 'this user' });
+                                setMemberMenuOpen(null);
+                              }}
+                            >
+                              Remove from group
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </li>
               ))}
             </ul>
@@ -796,6 +906,90 @@ function GroupDetailPage({ user }) {
                 disabled={deleteSubmitting}
               >
                 {deleteSubmitting ? 'Deleting…' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {confirmMakeAdmin && (
+        <div
+          className="modal-overlay"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="make-admin-modal-title"
+        >
+          <div className="modal-card">
+            <h3 id="make-admin-modal-title" className="modal-title">
+              Make {confirmMakeAdmin.fullName} an admin?
+            </h3>
+            <p className="modal-text">
+              Admins can edit the group, review membership requests, and manage members.
+            </p>
+            {memberActionError && (
+              <p className="form-error modal-error" role="alert">{memberActionError}</p>
+            )}
+            <div className="modal-actions">
+              <button
+                type="button"
+                className="header-button"
+                onClick={() => {
+                  setConfirmMakeAdmin(null);
+                  setMemberActionError(null);
+                }}
+                disabled={memberActionSubmitting}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="submit-button"
+                onClick={handleMakeAdminConfirm}
+                disabled={memberActionSubmitting}
+              >
+                {memberActionSubmitting ? 'Updating…' : 'Make admin'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {confirmRemoveMember && (
+        <div
+          className="modal-overlay"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="remove-member-modal-title"
+        >
+          <div className="modal-card">
+            <h3 id="remove-member-modal-title" className="modal-title">
+              Remove {confirmRemoveMember.fullName} from the group?
+            </h3>
+            <p className="modal-text">
+              They will lose access to the group and can request to join again if the group allows it.
+            </p>
+            {memberActionError && (
+              <p className="form-error modal-error" role="alert">{memberActionError}</p>
+            )}
+            <div className="modal-actions">
+              <button
+                type="button"
+                className="header-button"
+                onClick={() => {
+                  setConfirmRemoveMember(null);
+                  setMemberActionError(null);
+                }}
+                disabled={memberActionSubmitting}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="modal-delete-button"
+                onClick={handleRemoveMemberConfirm}
+                disabled={memberActionSubmitting}
+              >
+                {memberActionSubmitting ? 'Removing…' : 'Remove'}
               </button>
             </div>
           </div>

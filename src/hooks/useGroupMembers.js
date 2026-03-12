@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
 
 export function useGroupMembers(groupId) {
@@ -6,7 +6,7 @@ export function useGroupMembers(groupId) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
+  const refetch = useCallback(() => {
     if (!groupId) return;
     let isMounted = true;
     async function fetch() {
@@ -44,5 +44,9 @@ export function useGroupMembers(groupId) {
     return () => { isMounted = false; };
   }, [groupId]);
 
-  return { members, setMembers, loading, error };
+  useEffect(() => {
+    refetch();
+  }, [refetch]);
+
+  return { members, setMembers, loading, error, refetch };
 }

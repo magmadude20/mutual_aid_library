@@ -1,10 +1,10 @@
-import { Outlet, useLocation, NavLink } from 'react-router-dom';
+import { Outlet, useLocation, NavLink, Link } from 'react-router-dom';
 
 function Layout({ user, logout }) {
   const location = useLocation();
   const pathname = location.pathname;
   const hideTabs =
-    pathname.startsWith('/join/') || pathname.startsWith('/admin');
+    !user || pathname.startsWith('/join/') || pathname.startsWith('/admin');
 
   return (
     <div className="App">
@@ -12,15 +12,21 @@ function Layout({ user, logout }) {
         <div className="App-header-top">
           <h1>Mutual Aid Library of Things</h1>
           <div className="App-header-user">
-            <button type="button" className="logout-button" onClick={logout}>
-              Log out
-            </button>
+            {user ? (
+              <button type="button" className="logout-button" onClick={logout}>
+                Log out
+              </button>
+            ) : (
+              <Link to="/login" className="logout-button">
+                Sign in
+              </Link>
+            )}
           </div>
         </div>
         {!hideTabs && (
           <nav className="tabs" role="tablist" aria-label="Sections">
             <NavLink
-              to="/"
+              to="/things"
               end
               role="tab"
               aria-controls="things-panel"
@@ -68,19 +74,20 @@ function Layout({ user, logout }) {
         <Outlet />
       </main>
       <footer className="App-footer">
+        <Link to="/" className="App-footer-link">About</Link>
         {process.env.REACT_APP_FEEDBACK_EMAIL && (
           <>
+            {' · '}
             <a
               href={`mailto:${process.env.REACT_APP_FEEDBACK_EMAIL}`}
               className="App-footer-link"
             >
               Feedback
             </a>
-            {' · '}
           </>
         )}
-        © 2026 Very Serious Business
-        </footer>
+        {' · © 2026 Very Serious Business'}
+      </footer>
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
+import { Routes, Route, useNavigate, useLocation, Navigate, Link } from 'react-router-dom';
 import { useAuth } from './hooks/useAuth';
 import { useThings } from './hooks/useThings';
 import { useMyThings } from './hooks/useMyThings';
@@ -18,6 +18,7 @@ import GroupsListPage from './components/GroupsListPage';
 import CreateGroupPage from './components/CreateGroupPage';
 import GroupDetailPage from './components/GroupDetailPage';
 import UserDetailPage from './components/UserDetailPage';
+import AboutPage from './components/AboutPage';
 import './App.css';
 
 function App() {
@@ -42,7 +43,8 @@ function App() {
     const path = location.pathname;
     const isJoinPage = path.startsWith('/join/');
     const isGroupsArea = path === '/groups' || path.startsWith('/groups/');
-    if (!isJoinPage && !isGroupsArea && myGroups.length === 0) {
+    const isAboutPage = path === '/';
+    if (!isJoinPage && !isGroupsArea && !isAboutPage && myGroups.length === 0) {
       hasRedirectedNoGroupsToGroups.current = true;
       navigate('/groups', { replace: true });
     }
@@ -59,7 +61,6 @@ function App() {
   }
 
   if (!session) {
-    // Show 404 for /admin when not logged in; login screen for everything else.
     if (location.pathname.startsWith('/admin')) {
       return (
         <div className="App">
@@ -69,11 +70,25 @@ function App() {
         </div>
       );
     }
-    return (
-      <div className="App">
-        <Login />
-      </div>
-    );
+    if (location.pathname === '/login') {
+      return (
+        <div className="App">
+          <Login />
+        </div>
+      );
+    }
+    if (location.pathname === '/' || location.pathname === '/about') {
+      return (
+        <Routes>
+          <Route path="/" element={<Layout user={null} logout={() => {}} />}>
+            <Route index element={<AboutPage user={null} />} />
+          </Route>
+          <Route path="about" element={<Navigate to="/" replace />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      );
+    }
+    return <Navigate to="/" replace />;
   }
 
   const selectThing = (thing) => {
@@ -95,19 +110,20 @@ function App() {
   return (
     <>
       <Routes>
-      <Route path="/" element={<Layout user={user} logout={handleLogout} />}>
-        <Route
-          index
-          element={
-            <ThingsPanel
-              user={user}
-              things={things}
-              loading={thingsLoading}
-              error={thingsError}
-              onSelectThing={selectThing}
-            />
-          }
-        />
+        <Route path="/" element={<Layout user={user} logout={handleLogout} />}>
+          <Route index element={<AboutPage user={user} />} />
+          <Route
+            path="things"
+            element={
+              <ThingsPanel
+                user={user}
+                things={things}
+                loading={thingsLoading}
+                error={thingsError}
+                onSelectThing={selectThing}
+              />
+            }
+          />
         <Route
           path="requests"
           element={
@@ -120,10 +136,7 @@ function App() {
             />
           }
         />
-        <Route
-          path="my-things"
-          element={<Navigate to={user?.id ? `/user/${user.id}` : '/'} replace />}
-        />
+        <Route path="my-things" element={<Navigate to={user?.id ? `/user/${user.id}` : '/'} replace />} />
         <Route
           path="thing/:id"
           element={
@@ -167,6 +180,8 @@ function App() {
           }
         />
         <Route path="admin" element={<AdminPage user={user} />} />
+        <Route path="about" element={<Navigate to="/" replace />} />
+        <Route path="login" element={<Navigate to="/" replace />} />
         <Route path="*" element={<NotFoundPage />} />
       </Route>
       </Routes>

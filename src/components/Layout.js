@@ -68,8 +68,19 @@ function Layout({ user, logout }) {
         <Outlet />
       </main>
       <footer className="App-footer">
+        {process.env.REACT_APP_FEEDBACK_EMAIL && (
+          <>
+            <a
+              href={`mailto:${process.env.REACT_APP_FEEDBACK_EMAIL}`}
+              className="App-footer-link"
+            >
+              Feedback
+            </a>
+            {' · '}
+          </>
+        )}
         © 2026 Very Serious Business
-      </footer>
+        </footer>
     </div>
   );
 }

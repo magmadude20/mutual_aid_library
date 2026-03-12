@@ -129,6 +129,16 @@
   border-top: 1px solid #3a3f47;
 }
 
+.App-footer-link {
+  color: #9ca3af;
+  text-decoration: none;
+}
+
+.App-footer-link:hover {
+  color: #e4e6eb;
+  text-decoration: underline;
+}
+
 .status {
   text-align: center;
   color: #9ca3af;

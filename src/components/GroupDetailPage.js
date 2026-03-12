@@ -58,7 +58,8 @@ function GroupDetailPage({ user }) {
   const [memberActionSubmitting, setMemberActionSubmitting] = useState(false);
   const [memberActionError, setMemberActionError] = useState(null);
   const memberMenuAnchorRef = useRef(null);
-  const { members, setMembers, loading: membersLoading, error: membersError, refetch: refetchMembers } = useGroupMembers(groupId);
+  const [leaveBlockedOpen, setLeaveBlockedOpen] = useState(false);
+  const { members, loading: membersLoading, error: membersError, refetch: refetchMembers } = useGroupMembers(groupId);
   const { myThings, loading: myThingsLoading, error: myThingsError, refetch: refetchMyThings } = useMyThings(user?.id);
   const { myRequests, loading: myRequestsLoading, error: myRequestsError, refetch: refetchMyRequests } = useMyRequests(user?.id);
   const isAdmin = myRole === 'ADMIN';
@@ -351,6 +352,10 @@ function GroupDetailPage({ user }) {
 
   async function handleLeave() {
     if (!user?.id || !groupId) return;
+    if (isOnlyAdmin) {
+      setLeaveBlockedOpen(true);
+      return;
+    }
     try {
       await supabase.from('group_members').delete().eq('group_id', groupId).eq('user_id', user.id);
       navigate('/groups', { replace: true });
@@ -430,6 +435,9 @@ function GroupDetailPage({ user }) {
   if (loading) return <div className="App-main"><p className="status">Loading…</p></div>;
   if (error && !group) return <div className="App-main"><p className="status error">{error}</p></div>;
   if (!group) return <div className="App-main"><p className="status error">Group not found.</p></div>;
+
+  const adminCount = members.filter((m) => m.role === 'ADMIN').length;
+  const isOnlyAdmin = isAdmin && adminCount === 1;
 
   return (
     <div className="group-detail-page">
@@ -906,6 +914,33 @@ function GroupDetailPage({ user }) {
                 disabled={deleteSubmitting}
               >
                 {deleteSubmitting ? 'Deleting…' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {leaveBlockedOpen && (
+        <div
+          className="modal-overlay"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="leave-blocked-modal-title"
+        >
+          <div className="modal-card">
+            <h3 id="leave-blocked-modal-title" className="modal-title">
+              Can't leave yet
+            </h3>
+            <p className="modal-text">
+              You're the only admin. Make someone else an admin before you can leave the group.
+            </p>
+            <div className="modal-actions">
+              <button
+                type="button"
+                className="header-button"
+                onClick={() => setLeaveBlockedOpen(false)}
+              >
+                OK
               </button>
             </div>
           </div>

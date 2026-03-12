@@ -30,6 +30,19 @@
   margin: 0;
 }
 
+.add-item-modal-form .form-label.add-item-modal-label {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 0.2rem;
+}
+
+.add-item-modal-sublabel {
+  margin: 0 0 0.4rem;
+  font-size: 0.875rem;
+  color: #9ca3af;
+  line-height: 1.35;
+}
+
 .add-item-modal-form .add-thing-form-sharing {
   margin-top: 1rem;
 }

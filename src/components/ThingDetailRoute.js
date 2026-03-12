@@ -18,7 +18,7 @@ function ThingDetailRoute({ user, setThings, setMyThings, setRequests, setMyRequ
       try {
         const { data, error } = await supabase
           .from('items')
-          .select('id, name, description, user_id, type')
+          .select('id, name, description, additional_notes, user_id, type')
           .eq('id', id)
           .maybeSingle();
         if (!isMounted) return;

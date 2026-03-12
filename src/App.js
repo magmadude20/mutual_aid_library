@@ -136,10 +136,6 @@ function App() {
             />
           }
         />
-        <Route
-          path="settings"
-          element={<Navigate to={user?.id ? `/user/${user.id}` : '/'} replace />}
-        />
         <Route path="join/:inviteToken" element={<JoinGroupPage user={user} />} />
         <Route path="groups" element={<GroupsListPage user={user} />} />
         <Route path="groups/new" element={<CreateGroupPage user={user} />} />

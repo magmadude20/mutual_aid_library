@@ -10,6 +10,7 @@ function ThingDetailPage({ thing, user, onBack, onThingUpdated, onThingDeleted }
   const [editingThing, setEditingThing] = useState(false);
   const [editName, setEditName] = useState('');
   const [editDescription, setEditDescription] = useState('');
+  const [editAdditionalNotes, setEditAdditionalNotes] = useState('');
   const [editError, setEditError] = useState(null);
   const [editSubmitting, setEditSubmitting] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
@@ -90,6 +91,7 @@ function ThingDetailPage({ thing, user, onBack, onThingUpdated, onThingDeleted }
   function startEditing() {
     setEditName(thing.name ?? '');
     setEditDescription(thing.description ?? '');
+    setEditAdditionalNotes(thing.additional_notes ?? '');
     setEditError(null);
     setEditingThing(true);
   }
@@ -114,9 +116,10 @@ function ThingDetailPage({ thing, user, onBack, onThingUpdated, onThingDeleted }
         .update({
           name: trimmedName,
           description: editDescription.trim() || null,
+          additional_notes: editAdditionalNotes.trim() || null,
         })
         .eq('id', thing.id)
-        .select('id, name, description, user_id, type')
+        .select('id, name, description, additional_notes, user_id, type')
         .single();
 
       if (updateError) throw updateError;
@@ -262,6 +265,18 @@ function ThingDetailPage({ thing, user, onBack, onThingUpdated, onThingDeleted }
               rows={3}
               disabled={editSubmitting}
             />
+            <label className="form-label" htmlFor="edit-thing-additional-notes">
+              Additional notes (optional)
+            </label>
+            <textarea
+              id="edit-thing-additional-notes"
+              className="form-input form-textarea"
+              value={editAdditionalNotes}
+              onChange={(e) => setEditAdditionalNotes(e.target.value)}
+              placeholder="Stipulations, quirks, or other notes"
+              rows={2}
+              disabled={editSubmitting}
+            />
             <div className="thing-detail-edit-buttons">
               <button
                 type="submit"
@@ -287,6 +302,12 @@ function ThingDetailPage({ thing, user, onBack, onThingUpdated, onThingDeleted }
               <span className="thing-detail-prefix">Description</span>
               <span className="thing-detail-description-value">
                 {thing.description || '—'}
+              </span>
+            </div>
+            <div className="thing-detail-description-row">
+              <span className="thing-detail-prefix">Additional notes</span>
+              <span className="thing-detail-description-value">
+                {thing.additional_notes || '—'}
               </span>
             </div>
           </>

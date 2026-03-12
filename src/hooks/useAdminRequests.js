@@ -15,7 +15,7 @@ export function useAdminRequests() {
         setError(null);
         const { data, error: itemsError } = await supabase
           .from('items')
-          .select('id, name, description, user_id, type')
+          .select('id, name, description, additional_notes, user_id, type')
           .eq('type', 'request')
           .order('name');
         if (!isMounted) return;

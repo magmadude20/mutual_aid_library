@@ -260,7 +260,7 @@ function GroupDetailPage({ user }) {
       try {
         const { data, error: fetchError } = await supabase
           .from('items')
-          .select('id, name, description, user_id, type')
+          .select('id, name, description, additional_notes, user_id, type')
           .in('id', sharedThingIds);
         if (fetchError) throw fetchError;
         if (!isMounted) return;
@@ -566,14 +566,19 @@ function GroupDetailPage({ user }) {
 
       {isAdmin && !editingGroup && (
         <div className="group-detail-admin-actions-box">
+          <p className="group-detail-admin-actions-label">Admin actions</p>
+          <div className="group-detail-admin-actions">
+            <button type="button" className="header-button" onClick={startEditing}>
+              Edit group
+            </button>
+            <button type="button" className="header-button delete-button" onClick={() => setDeleteConfirmOpen(true)}>
+              Delete group
+            </button>
+          </div>
           <p className="group-detail-admin-actions-label">
-            Admin actions
-            {pendingCount > 0 && !pendingLoading && (
-              <span className="group-detail-pending-count">
-                {' '}
-                · {pendingCount} pending membership request{pendingCount === 1 ? '' : 's'}
-              </span>
-            )}
+            {pendingLoading
+              ? 'Checking membership requests…'
+              : `${pendingCount} pending membership request${pendingCount === 1 ? '' : 's'}`}
           </p>
           <div className="group-detail-admin-actions">
             <button
@@ -583,12 +588,6 @@ function GroupDetailPage({ user }) {
               disabled={pendingLoading}
             >
               {pendingLoading ? 'Loading requests…' : 'Review membership requests'}
-            </button>
-            <button type="button" className="header-button" onClick={startEditing}>
-              Edit group
-            </button>
-            <button type="button" className="header-button delete-button" onClick={() => setDeleteConfirmOpen(true)}>
-              Delete group
             </button>
           </div>
         </div>

@@ -21,7 +21,7 @@ export function useUserVisibleThings(userId) {
       try {
         const { data, error: fetchError } = await supabase
           .from('items')
-          .select('id, name, description, user_id, type')
+          .select('id, name, description, additional_notes, user_id, type')
           .eq('user_id', userId)
           .eq('type', 'thing')
           .order('name');

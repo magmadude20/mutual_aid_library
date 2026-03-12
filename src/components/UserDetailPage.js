@@ -177,14 +177,14 @@ function UserDetailPage({
             />
             <label className="form-label" htmlFor="user-edit-contact">Contact info (optional)</label>
             <p className="form-hint">
-              How others can reach you (e.g. <a href="https://signal.org/blog/phone-number-privacy-usernames/" target="_blank" rel="noopener noreferrer">Signal username</a>)
+              General location (part of town) and how others can reach you (phone, email, <a href="https://signal.org/blog/phone-number-privacy-usernames/" target="_blank" rel="noopener noreferrer">signal username</a>, etc.)
             </p>
             <textarea
               id="user-edit-contact"
               className="form-input form-textarea"
               value={editContactInfo}
               onChange={(e) => setEditContactInfo(e.target.value)}
-              placeholder="How others can reach you"
+              placeholder="Downtown. Phone: 867-5309"
               rows={3}
               disabled={saving}
             />

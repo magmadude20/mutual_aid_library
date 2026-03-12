@@ -15,6 +15,7 @@ function AddItemModal({ type, userId, onSuccess, onClose }) {
   const isThing = type === 'thing';
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
+  const [additionalNotes, setAdditionalNotes] = useState('');
   const [sharingGroupIds, setSharingGroupIds] = useState([]);
   const [formError, setFormError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
@@ -44,9 +45,10 @@ function AddItemModal({ type, userId, onSuccess, onClose }) {
           user_id: userId,
           name: trimmedName,
           description: description.trim() || null,
+          additional_notes: additionalNotes.trim() || null,
           type: isThing ? 'thing' : 'request',
         })
-        .select('id, name, description, user_id, type, created_at')
+        .select('id, name, description, additional_notes, user_id, type, created_at')
         .single();
 
       if (insertError) throw insertError;
@@ -72,7 +74,6 @@ function AddItemModal({ type, userId, onSuccess, onClose }) {
   }
 
   const title = isThing ? 'Add thing' : 'Add request';
-  const namePlaceholder = isThing ? 'Thing name' : 'What are you looking for?';
   const submitLabel = isThing ? 'Add thing' : 'Add request';
 
   return (
@@ -92,37 +93,67 @@ function AddItemModal({ type, userId, onSuccess, onClose }) {
               {formError}
             </p>
           )}
-          <label className="form-label" htmlFor="add-item-name">
-            Name
+          <label className="form-label add-item-modal-label" htmlFor="add-item-name">
+            {isThing ? 'Name' : 'What are you looking for?'}
           </label>
+          <p className="add-item-modal-sublabel" id="add-item-name-hint">
+            {isThing
+              ? 'A short description of what the thing is'
+              : 'A short description of what you\'re looking for'}
+          </p>
           <input
             id="add-item-name"
             type="text"
             className="form-input"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder={namePlaceholder}
+            placeholder="Toaster"
             required
             disabled={submitting}
             autoComplete="off"
+            aria-describedby="add-item-name-hint"
           />
-          <label className="form-label" htmlFor="add-item-description">
+          <label className="form-label add-item-modal-label" htmlFor="add-item-description">
             Description (optional)
           </label>
+          <p className="add-item-modal-sublabel" id="add-item-description-hint">
+            {isThing
+              ? 'Specifics on the thing in the event someone is considering using it'
+              : 'Specifics so others know how they can help'}
+          </p>
           <textarea
             id="add-item-description"
             className="form-input form-textarea"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="Description"
+            placeholder="Gently used cuisinart 2-slice toaster"
             rows={3}
             disabled={submitting}
+            aria-describedby="add-item-description-hint"
+          />
+          <label className="form-label add-item-modal-label" htmlFor="add-item-additional-notes">
+            Additional notes (optional)
+          </label>
+          <p className="add-item-modal-sublabel" id="add-item-additional-notes-hint">
+            {isThing
+              ? 'Any stipulations or quirks that the thing has'
+              : 'Any stipulations or preferences (e.g. timing, location)'}
+          </p>
+          <textarea
+            id="add-item-additional-notes"
+            className="form-input form-textarea"
+            value={additionalNotes}
+            onChange={(e) => setAdditionalNotes(e.target.value)}
+            placeholder="Empty crumb tray after each use or it'll catch on fire"
+            rows={2}
+            disabled={submitting}
+            aria-describedby="add-item-additional-notes-hint"
           />
           <div className="add-thing-form-sharing">
             <p className="add-thing-form-sharing-title">Sharing</p>
             {!ownerGroupsLoading && ownerGroups?.length > 0 && (
               <>
-                <p className="add-thing-form-groups-label">Shared with groups:</p>
+                <p className="add-thing-form-groups-label">Share with groups:</p>
                 {ownerGroups.map((g) => (
                   <div key={g.id} className="form-checkbox-row">
                     <input

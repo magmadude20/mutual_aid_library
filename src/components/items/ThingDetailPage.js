@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabaseClient';
-import Owner from './Owner';
-import { useOwnerGroups } from '../hooks/useOwnerGroups';
-import { useThingGroups } from '../hooks/useThingGroups';
-import { useUserProfile } from '../hooks/useUserProfile';
+import { supabase } from '../../lib/supabaseClient';
+import Owner from '../user/Owner';
+import { useOwnerGroups } from '../../hooks/useOwnerGroups';
+import { useThingGroups } from '../../hooks/useThingGroups';
+import { useUserProfile } from '../../hooks/useUserProfile';
 import './ThingDetailPage.css';
 
 function ThingDetailPage({ thing, user, onBack, onThingUpdated, onThingDeleted }) {

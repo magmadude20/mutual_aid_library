@@ -1,30 +1,30 @@
 import { useState, useEffect, useMemo } from 'react';
-import { supabase } from '../lib/supabaseClient';
-import { useMyGroups } from '../hooks/useMyGroups';
+import { supabase } from '../../lib/supabaseClient';
+import { useMyGroups } from '../../hooks/useMyGroups';
 import './ThingsPanel.css';
 
-function RequestsPanel({ user, requests, loading, error, onSelectRequest }) {
-  const [showMyRequests, setShowMyRequests] = useState(false);
+function ThingsPanel({ user, things, loading, error, onSelectThing }) {
+  const [showMyThings, setShowMyThings] = useState(false);
   const [groupFilter, setGroupFilter] = useState('all');
-  const [requestGroupIds, setRequestGroupIds] = useState({});
+  const [thingGroupIds, setThingGroupIds] = useState({});
   const [filtersExpanded, setFiltersExpanded] = useState(false);
   const [sortBy, setSortBy] = useState('newest');
 
   const { groups: myGroups } = useMyGroups(user?.id);
 
   useEffect(() => {
-    if (!requests?.length) {
-      setRequestGroupIds({});
+    if (!things?.length) {
+      setThingGroupIds({});
       return;
     }
-    const requestIds = requests.map((r) => r.id);
+    const thingIds = things.map((t) => t.id);
     let isMounted = true;
     (async () => {
       try {
         const { data, error: fetchError } = await supabase
           .from('things_to_groups')
           .select('thing_id, group_id')
-          .in('thing_id', requestIds);
+          .in('thing_id', thingIds);
         if (fetchError) throw fetchError;
         if (!isMounted) return;
         const map = {};
@@ -32,20 +32,20 @@ function RequestsPanel({ user, requests, loading, error, onSelectRequest }) {
           if (!map[row.thing_id]) map[row.thing_id] = [];
           map[row.thing_id].push(row.group_id);
         });
-        setRequestGroupIds(map);
+        setThingGroupIds(map);
       } catch {
-        if (isMounted) setRequestGroupIds({});
+        if (isMounted) setThingGroupIds({});
       }
     })();
     return () => { isMounted = false; };
-  }, [requests]);
+  }, [things]);
 
-  const filteredRequests = useMemo(() => {
-    const list = (requests ?? []).filter((request) => {
-      const isMyRequest = user?.id && request.user_id === user.id;
-      if (!showMyRequests && isMyRequest) return false;
+  const filteredThings = useMemo(() => {
+    const list = (things ?? []).filter((thing) => {
+      const isMyThing = user?.id && thing.user_id === user.id;
+      if (!showMyThings && isMyThing) return false;
       if (groupFilter === 'all') return true;
-      return (requestGroupIds[request.id] ?? []).includes(groupFilter);
+      return (thingGroupIds[thing.id] ?? []).includes(groupFilter);
     });
     const sorted = [...list].sort((a, b) => {
       if (sortBy === 'newest') {
@@ -64,42 +64,41 @@ function RequestsPanel({ user, requests, loading, error, onSelectRequest }) {
       return bName.localeCompare(aName); // z-a
     });
     return sorted;
-  }, [requests, showMyRequests, groupFilter, requestGroupIds, user?.id, sortBy]);
+  }, [things, showMyThings, groupFilter, thingGroupIds, user?.id, sortBy]);
 
   return (
     <div
-      id="requests-panel"
+      id="things-panel"
       role="tabpanel"
-      aria-labelledby="requests-tab"
+      aria-labelledby="things-tab"
       className="tab-panel"
     >
-      {loading && <p className="status">Loading requests…</p>}
+      {loading && <p className="status">Loading things…</p>}
       {error && (
         <p className="status error" role="alert">
           {error}
         </p>
       )}
 
-      {!loading && !error && (requests?.length ?? 0) > 0 && (
+      {!loading && !error && things.length > 0 && (
         <div
           className="things-panel-filters"
           role="group"
-          aria-label={filtersExpanded ? 'Filter requests' : 'Sort and filter'}
+          aria-label={filtersExpanded ? 'Filter things' : 'Sort and filter'}
         >
           <button
             type="button"
             className="things-panel-filters-toggle"
             onClick={() => setFiltersExpanded((v) => !v)}
             aria-expanded={filtersExpanded}
-            aria-controls="requests-panel-filters-content"
+            aria-controls="things-panel-filters-content"
           >
-            <span className="things-panel-filters-toggle-label">Sort and filter</span>
-            <span className="things-panel-filters-toggle-icon" aria-hidden="true">
-              {filtersExpanded ? '▼' : '▶'}
+            <span className="things-panel-filters-toggle-label">
+              {filtersExpanded ? '▼' : '▶'} Sort and filter
             </span>
           </button>
           <div
-            id="requests-panel-filters-content"
+            id="things-panel-filters-content"
             className="things-panel-filters-content"
             hidden={!filtersExpanded}
           >
@@ -107,19 +106,19 @@ function RequestsPanel({ user, requests, loading, error, onSelectRequest }) {
               <label className="things-panel-filter-checkbox">
                 <input
                   type="checkbox"
-                  checked={showMyRequests}
-                  onChange={(e) => setShowMyRequests(e.target.checked)}
-                  aria-label="Show my requests"
+                  checked={showMyThings}
+                  onChange={(e) => setShowMyThings(e.target.checked)}
+                  aria-label="Show my things"
                 />
-                <span>Show my requests</span>
+                <span>Show my things</span>
               </label>
             </div>
             <div className="things-panel-filter-row">
-              <label htmlFor="requests-panel-group-filter" className="things-panel-filter-label">
-                Requests shared in group
+              <label htmlFor="things-panel-group-filter" className="things-panel-filter-label">
+                Things shared in group
               </label>
               <select
-                id="requests-panel-group-filter"
+                id="things-panel-group-filter"
                 className="things-panel-group-select"
                 value={groupFilter}
                 onChange={(e) => setGroupFilter(e.target.value)}
@@ -134,11 +133,11 @@ function RequestsPanel({ user, requests, loading, error, onSelectRequest }) {
               </select>
             </div>
             <div className="things-panel-filter-row">
-              <label htmlFor="requests-panel-sort" className="things-panel-filter-label">
+              <label htmlFor="things-panel-sort" className="things-panel-filter-label">
                 Sort by
               </label>
               <select
-                id="requests-panel-sort"
+                id="things-panel-sort"
                 className="things-panel-group-select"
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
@@ -154,39 +153,39 @@ function RequestsPanel({ user, requests, loading, error, onSelectRequest }) {
         </div>
       )}
 
-      {!loading && !error && (requests?.length ?? 0) === 0 && (
+      {!loading && !error && things.length === 0 && (
         <p className="status">
-          No requests yet. Join a group to see requests, or add your own from My profile.
+          No things yet. Join a group to see things, or add your own from My profile.
         </p>
       )}
-      {!loading && !error && (requests?.length ?? 0) > 0 && (
-        <ul className="things-list" aria-label="Requests">
-          {filteredRequests.map((request) => (
-            <li key={request.id}>
+      {!loading && !error && things.length > 0 && (
+        <ul className="things-list" aria-label="Things">
+          {filteredThings.map((thing) => (
+            <li key={thing.id}>
               <button
                 type="button"
                 className="thing-card thing-card-clickable"
-                onClick={() => onSelectRequest(request)}
+                onClick={() => onSelectThing(thing)}
               >
                 <div className="thing-card-title-row">
-                  <div className="thing-name">{request.name}</div>
-                  {user?.id && request.user_id === user.id && (
+                  <div className="thing-name">{thing.name}</div>
+                  {user?.id && thing.user_id === user.id && (
                     <span className="item-yours-badge" aria-label="Your item">Yours</span>
                   )}
                 </div>
-                {request.description && (
-                  <div className="thing-description">{request.description}</div>
+                {thing.description && (
+                  <div className="thing-description">{thing.description}</div>
                 )}
               </button>
             </li>
           ))}
         </ul>
       )}
-      {!loading && !error && (requests?.length ?? 0) > 0 && filteredRequests.length === 0 && (
-        <p className="status">No requests match the current filters.</p>
+      {!loading && !error && things.length > 0 && filteredThings.length === 0 && (
+        <p className="status">No things match the current filters.</p>
       )}
     </div>
   );
 }
 
-export default RequestsPanel;
+export default ThingsPanel;

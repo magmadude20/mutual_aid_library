@@ -1,13 +1,13 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { supabase } from '../lib/supabaseClient';
-import { useGroupMembers } from '../hooks/useGroupMembers';
-import { useMyThings } from '../hooks/useMyThings';
-import { useMyRequests } from '../hooks/useMyRequests';
-import Map from './Map';
-import LocationPicker from './LocationPicker';
-import AddItemModal from './AddItemModal';
-import EditGroupSharingModal from './EditGroupSharingModal';
+import { supabase } from '../../lib/supabaseClient';
+import { useGroupMembers } from '../../hooks/useGroupMembers';
+import { useMyThings } from '../../hooks/useMyThings';
+import { useMyRequests } from '../../hooks/useMyRequests';
+import Map from '../location/Map';
+import LocationPicker from '../location/LocationPicker';
+import AddItemModal from '../items/AddItemModal';
+import EditGroupSharingModal from '../items/EditGroupSharingModal';
 import './GroupDetailPage.css';
 
 const DEFAULT_LAT = 45;

@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { Routes, Route, useNavigate, useLocation, Navigate, Link } from 'react-router-dom';
+import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { useAuth } from './hooks/useAuth';
 import { useThings } from './hooks/useThings';
 import { useMyThings } from './hooks/useMyThings';
@@ -8,17 +8,17 @@ import { useMyRequests } from './hooks/useMyRequests';
 import { useMyGroups } from './hooks/useMyGroups';
 import Login from './components/Login';
 import Layout from './components/Layout';
-import ThingDetailRoute from './components/ThingDetailRoute';
-import ThingsPanel from './components/ThingsPanel';
-import RequestsPanel from './components/RequestsPanel';
-import AdminPage from './components/AdminPage';
+import ThingDetailRoute from './components/items/ThingDetailRoute';
+import ThingsPanel from './components/items/ThingsPanel';
+import RequestsPanel from './components/items/RequestsPanel';
+import AdminPage from './components/admin/AdminPage';
 import NotFoundPage from './components/NotFoundPage';
-import JoinGroupPage from './components/JoinGroupPage';
-import GroupsListPage from './components/GroupsListPage';
-import CreateGroupPage from './components/CreateGroupPage';
-import GroupDetailPage from './components/GroupDetailPage';
-import UserDetailPage from './components/UserDetailPage';
-import AboutPage from './components/AboutPage';
+import JoinGroupPage from './components/groups/JoinGroupPage';
+import GroupsListPage from './components/groups/GroupsListPage';
+import CreateGroupPage from './components/groups/CreateGroupPage';
+import GroupDetailPage from './components/groups/GroupDetailPage';
+import UserDetailPage from './components/user/UserDetailPage';
+import AboutPage from './components/about/AboutPage';
 import './App.css';
 
 function App() {

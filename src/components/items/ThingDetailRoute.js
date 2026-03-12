@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
-import { supabase } from '../lib/supabaseClient';
+import { supabase } from '../../lib/supabaseClient';
 import ThingDetailPage from './ThingDetailPage';
 
 function ThingDetailRoute({ user, setThings, setMyThings, setRequests, setMyRequests }) {

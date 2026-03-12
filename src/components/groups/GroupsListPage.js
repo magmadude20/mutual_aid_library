@@ -1,8 +1,8 @@
 import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { useMyGroups } from '../hooks/useMyGroups';
-import { usePublicGroups } from '../hooks/usePublicGroups';
-import { useGroupCounts } from '../hooks/useGroupCounts';
+import { useMyGroups } from '../../hooks/useMyGroups';
+import { usePublicGroups } from '../../hooks/usePublicGroups';
+import { useGroupCounts } from '../../hooks/useGroupCounts';
 import './GroupsListPage.css';
 
 function GroupsListPage({ user }) {

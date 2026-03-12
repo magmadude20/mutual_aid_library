@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { supabase } from '../lib/supabaseClient';
-import { useUserProfile } from '../hooks/useUserProfile';
-import { useUserVisibleThings } from '../hooks/useUserVisibleThings';
-import { useUserVisibleRequests } from '../hooks/useUserVisibleRequests';
-import { useMyGroups } from '../hooks/useMyGroups';
-import MyItemsPanel from './MyItemsPanel';
+import { supabase } from '../../lib/supabaseClient';
+import { useUserProfile } from '../../hooks/useUserProfile';
+import { useUserVisibleThings } from '../../hooks/useUserVisibleThings';
+import { useUserVisibleRequests } from '../../hooks/useUserVisibleRequests';
+import { useMyGroups } from '../../hooks/useMyGroups';
+import MyItemsPanel from '../items/MyItemsPanel';
 import './UserDetailPage.css';
 
 function UserDetailPage({

@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { nanoid } from 'nanoid';
-import { supabase } from '../lib/supabaseClient';
-import LocationPicker from './LocationPicker';
+import { supabase } from '../../lib/supabaseClient';
+import LocationPicker from '../location/LocationPicker';
 import './CreateGroupPage.css';
 
 function CreateGroupPage({ user }) {

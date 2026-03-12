@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { supabase } from '../lib/supabaseClient';
-import Map from './Map';
+import { supabase } from '../../lib/supabaseClient';
+import Map from '../location/Map';
 import './JoinGroupPage.css';
 
 function JoinGroupPage({ user }) {

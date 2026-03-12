@@ -1,62 +1,62 @@
 import { useState, useEffect } from 'react';
-import { useOwnerGroups } from '../hooks/useOwnerGroups';
-import { supabase } from '../lib/supabaseClient';
+import { useOwnerGroups } from '../../hooks/useOwnerGroups';
+import { supabase } from '../../lib/supabaseClient';
 import AddItemModal from './AddItemModal';
 import './MyThingsPanel.css';
 
-function MyRequestsPanel({
+function MyThingsPanel({
   user,
-  myRequests,
-  setMyRequests,
-  myRequestsLoading,
-  myRequestsError,
-  onRequestAdded,
-  onSelectRequest,
-  canAddRequests = true,
+  myThings,
+  setMyThings,
+  myThingsLoading,
+  myThingsError,
+  onThingAdded,
+  onSelectThing,
+  canAddThings = true,
   showTitle = true,
 }) {
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [selectedIds, setSelectedIds] = useState([]);
-  const [bulkModal, setBulkModal] = useState(null);
+  const [bulkModal, setBulkModal] = useState(null); // 'sharing' | 'delete'
   const [bulkSharingGroupIds, setBulkSharingGroupIds] = useState([]);
   const [bulkSaving, setBulkSaving] = useState(false);
   const [bulkError, setBulkError] = useState(null);
   const [bulkDeleteSubmitting, setBulkDeleteSubmitting] = useState(false);
-  const [sharedCountByRequestId, setSharedCountByRequestId] = useState({});
+  const [sharedCountByThingId, setSharedCountByThingId] = useState({});
 
   const { groups: ownerGroups, loading: ownerGroupsLoading } = useOwnerGroups(user?.id);
 
   useEffect(() => {
-    if (!myRequests?.length) {
-      setSharedCountByRequestId({});
+    if (!myThings?.length) {
+      setSharedCountByThingId({});
       return;
     }
-    const requestIds = myRequests.map((r) => r.id);
+    const thingIds = myThings.map((t) => t.id);
     let isMounted = true;
     (async () => {
       try {
         const { data, error: fetchError } = await supabase
           .from('things_to_groups')
           .select('thing_id')
-          .in('thing_id', requestIds);
+          .in('thing_id', thingIds);
         if (fetchError) throw fetchError;
         if (!isMounted) return;
         const countBy = (data ?? []).reduce((acc, row) => {
           acc[row.thing_id] = (acc[row.thing_id] ?? 0) + 1;
           return acc;
         }, {});
-        setSharedCountByRequestId(countBy);
+        setSharedCountByThingId(countBy);
       } catch {
-        if (isMounted) setSharedCountByRequestId({});
+        if (isMounted) setSharedCountByThingId({});
       }
     })();
     return () => { isMounted = false; };
-  }, [myRequests]);
+  }, [myThings]);
 
-  function toggleSelected(requestId, e) {
+  function toggleSelected(thingId, e) {
     e.stopPropagation();
     setSelectedIds((prev) =>
-      prev.includes(requestId) ? prev.filter((id) => id !== requestId) : [...prev, requestId]
+      prev.includes(thingId) ? prev.filter((id) => id !== thingId) : [...prev, thingId]
     );
   }
 
@@ -67,8 +67,8 @@ function MyRequestsPanel({
   }
 
   function selectAll() {
-    if (myRequests.length === 0) return;
-    setSelectedIds(myRequests.map((r) => r.id));
+    if (myThings.length === 0) return;
+    setSelectedIds(myThings.map((t) => t.id));
   }
 
   function openBulkAction(action) {
@@ -81,15 +81,15 @@ function MyRequestsPanel({
     setBulkSaving(true);
     setBulkError(null);
     try {
-      for (const requestId of selectedIds) {
-        await supabase.from('things_to_groups').delete().eq('thing_id', requestId);
+      for (const thingId of selectedIds) {
+        await supabase.from('things_to_groups').delete().eq('thing_id', thingId);
         if (bulkSharingGroupIds.length > 0) {
           await supabase
             .from('things_to_groups')
-            .insert(bulkSharingGroupIds.map((group_id) => ({ thing_id: requestId, group_id })));
+            .insert(bulkSharingGroupIds.map((group_id) => ({ thing_id: thingId, group_id })));
         }
       }
-      setSharedCountByRequestId((prev) => {
+      setSharedCountByThingId((prev) => {
         const next = { ...prev };
         selectedIds.forEach((id) => {
           next[id] = bulkSharingGroupIds.length;
@@ -114,10 +114,10 @@ function MyRequestsPanel({
     setBulkError(null);
     setBulkDeleteSubmitting(true);
     try {
-      for (const requestId of selectedIds) {
-        await supabase.from('items').delete().eq('id', requestId);
+      for (const thingId of selectedIds) {
+        await supabase.from('items').delete().eq('id', thingId);
       }
-      setMyRequests((prev) => prev.filter((r) => !selectedIds.includes(r.id)));
+      setMyThings((prev) => prev.filter((t) => !selectedIds.includes(t.id)));
       setBulkModal(null);
       setSelectedIds([]);
     } catch (err) {
@@ -131,28 +131,28 @@ function MyRequestsPanel({
 
   return (
     <div
-      id="myrequests-panel"
+      id="mythings-panel"
       role="tabpanel"
-      aria-labelledby="myrequests-tab"
+      aria-labelledby="mythings-tab"
       className="tab-panel"
     >
       <div className="my-things-header">
-        {showTitle && <h2 className="tab-panel-title">My requests</h2>}
+        {showTitle && <h2 className="tab-panel-title">My things</h2>}
         <button
           type="button"
           className="header-button my-things-add-button"
           onClick={() => setAddModalOpen(true)}
-          disabled={!canAddRequests}
+          disabled={!canAddThings}
         >
-          + Add new request
+          + Add new thing
         </button>
-        {!myRequestsLoading && !myRequestsError && myRequests.length > 0 && (
+        {!myThingsLoading && !myThingsError && myThings.length > 0 && (
           <div className="my-things-header-bulk-buttons">
             <button
               type="button"
               className="header-button"
               onClick={selectAll}
-              disabled={myRequests.every((r) => selectedIds.includes(r.id))}
+              disabled={myThings.every((t) => selectedIds.includes(t.id))}
               aria-label="Select all"
             >
               Select all
@@ -165,13 +165,13 @@ function MyRequestsPanel({
           </div>
         )}
       </div>
-      {myRequestsLoading && <p className="status">Loading your requests…</p>}
-      {myRequestsError && (
+      {myThingsLoading && <p className="status">Loading your things…</p>}
+      {myThingsError && (
         <p className="status error" role="alert">
-          {myRequestsError}
+          {myThingsError}
         </p>
       )}
-      {!myRequestsLoading && !myRequestsError && myRequests.length > 0 && (
+      {!myThingsLoading && !myThingsError && myThings.length > 0 && (
         <>
           {selectedCount > 0 && (
             <div className="my-things-bulk-toolbar">
@@ -196,38 +196,38 @@ function MyRequestsPanel({
               </div>
             </div>
           )}
-          <ul className="things-list" aria-label="My requests">
-            {myRequests.map((request) => (
-              <li key={request.id} className="thing-list-row">
+          <ul className="things-list" aria-label="My things">
+            {myThings.map((thing) => (
+              <li key={thing.id} className="thing-list-row">
                 <input
                   type="checkbox"
                   className="thing-select-checkbox"
-                  checked={selectedIds.includes(request.id)}
-                  onChange={(e) => toggleSelected(request.id, e)}
-                  aria-label={`Select ${request.name}`}
+                  checked={selectedIds.includes(thing.id)}
+                  onChange={(e) => toggleSelected(thing.id, e)}
+                  aria-label={`Select ${thing.name}`}
                 />
                 <div
                   className="thing-card thing-card-clickable"
                   role="button"
                   tabIndex={0}
-                  onClick={() => onSelectRequest(request)}
+                  onClick={() => onSelectThing(thing)}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' || e.key === ' ') {
                       e.preventDefault();
-                      onSelectRequest(request);
+                      onSelectThing(thing);
                     }
                   }}
                 >
                   <div className="thing-card-content">
-                    <div className="thing-name">{request.name}</div>
-                    {request.description && (
-                      <div className="thing-description">{request.description}</div>
+                    <div className="thing-name">{thing.name}</div>
+                    {thing.description && (
+                      <div className="thing-description">{thing.description}</div>
                     )}
                     <div className="thing-sharing-summary" aria-label="Sharing">
                       Shared with{' '}
                       {ownerGroups.length === 0
                         ? '0 groups'
-                        : `${sharedCountByRequestId[request.id] ?? 0}/${ownerGroups.length} groups`}
+                        : `${sharedCountByThingId[thing.id] ?? 0}/${ownerGroups.length} groups`}
                     </div>
                   </div>
                 </div>
@@ -236,14 +236,15 @@ function MyRequestsPanel({
           </ul>
         </>
       )}
-      {!myRequestsLoading && !myRequestsError && myRequests.length === 0 && (
-        <p className="status">You haven&apos;t added any requests yet.</p>
+      {!myThingsLoading && !myThingsError && myThings.length === 0 && (
+        <p className="status">You haven&apos;t added any things yet.</p>
       )}
 
+      {/* Bulk Edit sharing modal */}
       {bulkModal === 'sharing' && (
-        <div className="my-things-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="bulk-sharing-request-title">
+        <div className="my-things-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="bulk-sharing-title">
           <div className="my-things-modal-card">
-            <h3 id="bulk-sharing-request-title">Edit sharing for {selectedCount} requests</h3>
+            <h3 id="bulk-sharing-title">Edit sharing for {selectedCount} things</h3>
             <form onSubmit={handleBulkSharingSave}>
               {bulkError && <p className="form-error" role="alert">{bulkError}</p>}
               {!ownerGroupsLoading && ownerGroups.length > 0 && (
@@ -252,13 +253,13 @@ function MyRequestsPanel({
                   {ownerGroups.map((g) => (
                     <div key={g.id} className="form-checkbox-row">
                       <input
-                        id={`bulk-share-request-g-${g.id}`}
+                        id={`bulk-share-g-${g.id}`}
                         type="checkbox"
                         checked={bulkSharingGroupIds.includes(g.id)}
                         onChange={() => toggleBulkGroup(g.id)}
                         disabled={bulkSaving}
                       />
-                      <label className="form-label" htmlFor={`bulk-share-request-g-${g.id}`}>{g.name}</label>
+                      <label className="form-label" htmlFor={`bulk-share-g-${g.id}`}>{g.name}</label>
                     </div>
                   ))}
                 </>
@@ -276,10 +277,11 @@ function MyRequestsPanel({
         </div>
       )}
 
+      {/* Bulk Delete confirmation */}
       {bulkModal === 'delete' && (
-        <div className="my-things-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="bulk-delete-request-title">
+        <div className="my-things-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="bulk-delete-title">
           <div className="my-things-modal-card">
-            <h3 id="bulk-delete-request-title">Delete {selectedCount} requests?</h3>
+            <h3 id="bulk-delete-title">Delete {selectedCount} things?</h3>
             <p className="modal-text">This cannot be undone.</p>
             {bulkError && <p className="form-error" role="alert">{bulkError}</p>}
             <div className="my-things-modal-actions">
@@ -301,10 +303,10 @@ function MyRequestsPanel({
 
       {addModalOpen && (
         <AddItemModal
-          type="request"
+          type="thing"
           userId={user?.id}
           onSuccess={(data) => {
-            onRequestAdded?.(data);
+            onThingAdded?.(data);
             setAddModalOpen(false);
           }}
           onClose={() => setAddModalOpen(false)}
@@ -314,4 +316,4 @@ function MyRequestsPanel({
   );
 }
 
-export default MyRequestsPanel;
+export default MyThingsPanel;

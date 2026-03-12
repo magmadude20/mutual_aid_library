@@ -46,7 +46,7 @@ function AboutPage({ user }) {
           </li>
           <li>
             <strong>Contact others.</strong> When you want to borrow something or respond to a request,
-            use the “Request thing” or “Contact” button on the item. Your message is sent by email; the
+            use the "Request thing" or "Contact" button on the item. Your message is sent by email; the
             other person will see your email when they reply, so you can arrange the exchange.
           </li>
         </ul>

@@ -1,10 +1,10 @@
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useCurrentProfile } from '../hooks/useCurrentProfile';
-import { useAdminGroups } from '../hooks/useAdminGroups';
-import { useAdminUsers } from '../hooks/useAdminUsers';
-import { useAdminItems } from '../hooks/useAdminItems';
-import { useAdminRequests } from '../hooks/useAdminRequests';
-import NotFoundPage from './NotFoundPage';
+import { useCurrentProfile } from '../../hooks/useCurrentProfile';
+import { useAdminGroups } from '../../hooks/useAdminGroups';
+import { useAdminUsers } from '../../hooks/useAdminUsers';
+import { useAdminItems } from '../../hooks/useAdminItems';
+import { useAdminRequests } from '../../hooks/useAdminRequests';
+import NotFoundPage from '../NotFoundPage';
 import './AdminPage.css';
 
 function AdminPage({ user }) {
@@ -290,4 +290,3 @@ function AdminPage({ user }) {
 }
 
 export default AdminPage;
-

@@ -15,8 +15,7 @@ function AboutPage({ user }) {
           <strong>libraries of things</strong>
           </a> that get better as more people join them.
           <br />
-          You can list what you have to share or what you need, and connect with others in
-          your groups to borrow, lend, or help out.
+          You can list what you have to share, and connect with others to borrow, lend, or help out.
         </p>
       </section>
 

@@ -117,6 +117,7 @@ function App() {
             element={
               <ThingsPanel
                 user={user}
+                myGroups={myGroups}
                 things={things}
                 loading={thingsLoading}
                 error={thingsError}
@@ -129,6 +130,7 @@ function App() {
           element={
             <RequestsPanel
               user={user}
+              myGroups={myGroups}
               requests={requests}
               loading={requestsLoading}
               error={requestsError}
@@ -158,6 +160,7 @@ function App() {
           element={
             <UserDetailPage
               user={user}
+              myGroups={myGroups}
               myThings={myThings}
               setMyThings={setMyThings}
               myThingsLoading={myThingsLoading}

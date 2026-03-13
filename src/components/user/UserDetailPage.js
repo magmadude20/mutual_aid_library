@@ -4,12 +4,12 @@ import { supabase } from '../../lib/supabaseClient';
 import { useUserProfile } from '../../hooks/useUserProfile';
 import { useUserVisibleThings } from '../../hooks/useUserVisibleThings';
 import { useUserVisibleRequests } from '../../hooks/useUserVisibleRequests';
-import { useMyGroups } from '../../hooks/useMyGroups';
 import MyItemsPanel from '../items/MyItemsPanel';
 import './UserDetailPage.css';
 
 function UserDetailPage({
   user,
+  myGroups,
   myThings,
   setMyThings,
   myThingsLoading,
@@ -27,9 +27,55 @@ function UserDetailPage({
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const activeItemsTab = searchParams.get('tab') === 'requests' ? 'requests' : 'things';
-  const { groups: userGroups, loading: userGroupsLoading, error: userGroupsError } = useMyGroups(userId);
-  const { groups: myGroups } = useMyGroups(user?.id);
+  const isSelf = user?.id === userId;
   const myGroupIds = new Set((myGroups ?? []).map((g) => g.id));
+  const [userGroups, setUserGroups] = useState([]);
+  const [userGroupsLoading, setUserGroupsLoading] = useState(true);
+  const [userGroupsError, setUserGroupsError] = useState(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    async function loadGroups() {
+      if (isSelf) {
+        setUserGroups(myGroups ?? []);
+        setUserGroupsLoading(false);
+        setUserGroupsError(null);
+        return;
+      }
+      try {
+        setUserGroupsLoading(true);
+        setUserGroupsError(null);
+        const { getGroupMembershipsForUser, getGroupsByIds } = await import('../../services/groupsService');
+        const memberships = await getGroupMembershipsForUser(userId);
+        if (!isMounted) return;
+        const groupIds = memberships.map((r) => r.group_id);
+        if (groupIds.length === 0) {
+          setUserGroups([]);
+          setUserGroupsLoading(false);
+          return;
+        }
+        const roleByGroupId = {};
+        memberships.forEach((m) => {
+          roleByGroupId[m.group_id] = m.role;
+        });
+        const groupData = await getGroupsByIds(groupIds, { withInvite: true });
+        if (!isMounted) return;
+        const groupsWithRole = (groupData ?? []).map((g) => ({
+          ...g,
+          myRole: roleByGroupId[g.id] ?? null,
+        }));
+        setUserGroups(groupsWithRole);
+      } catch (err) {
+        if (!isMounted) return;
+        setUserGroupsError(err.message || 'Failed to load groups.');
+      } finally {
+        if (!isMounted) return;
+        setUserGroupsLoading(false);
+      }
+    }
+    loadGroups();
+    return () => { isMounted = false; };
+  }, [isSelf, myGroups, userId]);
 
   function handleItemsTabChange(tab) {
     if (tab === 'requests') {
@@ -52,7 +98,6 @@ function UserDetailPage({
   const [deleteSubmitting, setDeleteSubmitting] = useState(false);
   const [deleteError, setDeleteError] = useState(null);
 
-  const isSelf = user?.id === userId;
   const [groupsExpanded, setGroupsExpanded] = useState(false);
 
   useEffect(() => {

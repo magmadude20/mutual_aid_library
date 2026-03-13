@@ -1,16 +1,13 @@
 import { useState, useEffect, useMemo } from 'react';
 import { getSharesForThings } from '../../services/thingsToGroupsService';
-import { useMyGroups } from '../../hooks/useMyGroups';
 import './ThingsPanel.css';
 
-function RequestsPanel({ user, requests, loading, error, onSelectRequest }) {
+function RequestsPanel({ user, myGroups, requests, loading, error, onSelectRequest }) {
   const [showMyRequests, setShowMyRequests] = useState(false);
   const [groupFilter, setGroupFilter] = useState('all');
   const [requestGroupIds, setRequestGroupIds] = useState({});
   const [filtersExpanded, setFiltersExpanded] = useState(false);
   const [sortBy, setSortBy] = useState('newest');
-
-  const { groups: myGroups } = useMyGroups(user?.id);
 
   useEffect(() => {
     if (!requests?.length) {

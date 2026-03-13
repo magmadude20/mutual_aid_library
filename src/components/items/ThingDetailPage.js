@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { supabase } from '../../lib/supabaseClient';
 import { deleteItem, updateItem } from '../../services/itemsService';
 import { addShare, removeShare, setThingGroups } from '../../services/thingsToGroupsService';
 import Owner from '../user/Owner';

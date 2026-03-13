@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { supabase } from '../../lib/supabaseClient';
+import { getSharesForThings } from '../../services/thingsToGroupsService';
 import { useMyGroups } from '../../hooks/useMyGroups';
 import './ThingsPanel.css';
 
@@ -21,11 +21,7 @@ function RequestsPanel({ user, requests, loading, error, onSelectRequest }) {
     let isMounted = true;
     (async () => {
       try {
-        const { data, error: fetchError } = await supabase
-          .from('things_to_groups')
-          .select('thing_id, group_id')
-          .in('thing_id', requestIds);
-        if (fetchError) throw fetchError;
+        const data = await getSharesForThings(requestIds);
         if (!isMounted) return;
         const map = {};
         (data ?? []).forEach((row) => {

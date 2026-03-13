@@ -1,5 +1,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import { supabase } from '../lib/supabaseClient';
+import { getAdminGroups } from '../services/groupsService';
+import { getGroupIdsForGroups } from '../services/thingsToGroupsService';
 
 export function useAdminGroups() {
   const [groups, setGroups] = useState([]);
@@ -16,12 +18,8 @@ export function useAdminGroups() {
       try {
         setLoading(true);
         setError(null);
-        const { data, error: groupsError } = await supabase
-          .from('groups')
-          .select('id, name, description, is_public')
-          .order('name');
+        const data = await getAdminGroups();
         if (!isMounted) return;
-        if (groupsError) throw groupsError;
         setGroups(data ?? []);
       } catch (err) {
         if (!isMounted) return;
@@ -44,16 +42,16 @@ export function useAdminGroups() {
     let isMounted = true;
     (async () => {
       try {
-        const [membersRes, thingsRes] = await Promise.all([
+        const [membersRes, thingsRows] = await Promise.all([
           supabase.from('group_members').select('group_id').in('group_id', groupIds),
-          supabase.from('things_to_groups').select('group_id').in('group_id', groupIds),
+          getGroupIdsForGroups(groupIds),
         ]);
         if (!isMounted) return;
         const memberCounts = (membersRes.data ?? []).reduce((acc, row) => {
           acc[row.group_id] = (acc[row.group_id] ?? 0) + 1;
           return acc;
         }, {});
-        const thingCounts = (thingsRes.data ?? []).reduce((acc, row) => {
+        const thingCounts = (thingsRows ?? []).reduce((acc, row) => {
           acc[row.group_id] = (acc[row.group_id] ?? 0) + 1;
           return acc;
         }, {});

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { supabase } from '../lib/supabaseClient';
+import { getGroupIdsForThing } from '../services/thingsToGroupsService';
 
 /** Which groups a thing is shared with (thing_groups for thingId). */
 export function useThingGroups(thingId) {
@@ -19,13 +19,9 @@ export function useThingGroups(thingId) {
       try {
         if (!silent) setLoading(true);
         setError(null);
-        const { data, error: fetchError } = await supabase
-          .from('things_to_groups')
-          .select('group_id')
-          .eq('thing_id', thingId);
-        if (fetchError) throw fetchError;
+        const groupIds = await getGroupIdsForThing(thingId);
         if (!mountedRef.current) return;
-        setGroupIds((data ?? []).map((r) => r.group_id));
+        setGroupIds(groupIds);
       } catch (err) {
         if (!mountedRef.current) return;
         setError(err.message || 'Failed to load sharing.');

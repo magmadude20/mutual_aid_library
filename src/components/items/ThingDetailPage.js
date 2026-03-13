@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../../lib/supabaseClient';
+import { deleteItem, updateItem } from '../../services/itemsService';
+import { addShare, removeShare, setThingGroups } from '../../services/thingsToGroupsService';
 import Owner from '../user/Owner';
 import { useOwnerGroups } from '../../hooks/useOwnerGroups';
 import { useThingGroups } from '../../hooks/useThingGroups';
@@ -45,17 +46,9 @@ function ThingDetailPage({ thing, user, onBack, onThingUpdated, onThingDeleted }
     setSharingSaving(true);
     try {
       if (currentlyShared) {
-        const { error } = await supabase
-          .from('things_to_groups')
-          .delete()
-          .eq('thing_id', thing.id)
-          .eq('group_id', groupId);
-        if (error) throw error;
+        await removeShare(thing.id, groupId);
       } else {
-        const { error } = await supabase
-          .from('things_to_groups')
-          .insert({ thing_id: thing.id, group_id: groupId });
-        if (error) throw error;
+        await addShare(thing.id, groupId);
       }
       refetchThingGroups(true);
     } catch (err) {
@@ -75,10 +68,7 @@ function ThingDetailPage({ thing, user, onBack, onThingUpdated, onThingDeleted }
     setSharingGroupIds((prev) => [...prev, ...toAdd.map((g) => g.id)]);
     setSharingSaving(true);
     try {
-      const { error } = await supabase.from('things_to_groups').insert(
-        toAdd.map((g) => ({ thing_id: thing.id, group_id: g.id }))
-      );
-      if (error) throw error;
+      await setThingGroups(thing.id, [...new Set([...sharingGroupIds, ...toAdd.map((g) => g.id)])]);
       refetchThingGroups(true);
     } catch (err) {
       setSharingGroupIds(previousIds);
@@ -111,18 +101,11 @@ function ThingDetailPage({ thing, user, onBack, onThingUpdated, onThingDeleted }
     setEditError(null);
     setEditSubmitting(true);
     try {
-      const { data, error: updateError } = await supabase
-        .from('items')
-        .update({
-          name: trimmedName,
-          description: editDescription.trim() || null,
-          additional_notes: editAdditionalNotes.trim() || null,
-        })
-        .eq('id', thing.id)
-        .select('id, name, description, additional_notes, user_id, type')
-        .single();
-
-      if (updateError) throw updateError;
+      const data = await updateItem(thing.id, {
+        name: trimmedName,
+        description: editDescription.trim() || '',
+        additionalNotes: editAdditionalNotes.trim() || '',
+      });
       setEditingThing(false);
       onThingUpdated(data);
     } catch (err) {
@@ -136,12 +119,7 @@ function ThingDetailPage({ thing, user, onBack, onThingUpdated, onThingDeleted }
     setDeleteError(null);
     setDeleteSubmitting(true);
     try {
-      const { error: err } = await supabase
-        .from('items')
-        .delete()
-        .eq('id', thing.id);
-
-      if (err) throw err;
+      await deleteItem(thing.id);
       setDeleteConfirmOpen(false);
       onThingDeleted();
     } catch (err) {

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { supabase } from '../lib/supabaseClient';
+import { getItems } from '../services/itemsService';
 
 export function useMyThings(userId) {
   const [myThings, setMyThings] = useState([]);
@@ -13,13 +13,7 @@ export function useMyThings(userId) {
       try {
         setLoading(true);
         setError(null);
-        const { data, error: fetchError } = await supabase
-          .from('items')
-          .select('id, name, description, additional_notes, user_id, type, created_at')
-          .eq('user_id', userId)
-          .eq('type', 'thing');
-
-        if (fetchError) throw fetchError;
+        const data = await getItems({ type: 'thing', userId });
         if (!isMounted) return;
         setMyThings(data ?? []);
       } catch (err) {

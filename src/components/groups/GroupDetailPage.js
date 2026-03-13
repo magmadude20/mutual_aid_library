@@ -4,6 +4,8 @@ import { supabase } from '../../lib/supabaseClient';
 import { useGroupMembers } from '../../hooks/useGroupMembers';
 import { useMyThings } from '../../hooks/useMyThings';
 import { useMyRequests } from '../../hooks/useMyRequests';
+import { getThingIdsForGroup } from '../../services/thingsToGroupsService';
+import { getItems } from '../../services/itemsService';
 import Map from '../location/Map';
 import LocationPicker from '../location/LocationPicker';
 import AddItemModal from '../items/AddItemModal';
@@ -289,13 +291,9 @@ function GroupDetailPage({ user }) {
     setThingsError(null);
     (async () => {
       try {
-        const { data, error: fetchError } = await supabase
-          .from('things_to_groups')
-          .select('thing_id')
-          .eq('group_id', groupId);
-        if (fetchError) throw fetchError;
+        const ids = await getThingIdsForGroup(groupId);
         if (!isMounted) return;
-        setSharedThingIds((data ?? []).map((r) => r.thing_id));
+        setSharedThingIds(ids);
       } catch (err) {
         if (!isMounted) return;
         setThingsError(err.message || 'Failed to load sharing.');
@@ -317,13 +315,8 @@ function GroupDetailPage({ user }) {
     setSharedItemsLoading(true);
     (async () => {
       try {
-        const { data, error: fetchError } = await supabase
-          .from('items')
-          .select('id, name, description, additional_notes, user_id, type')
-          .in('id', sharedThingIds);
-        if (fetchError) throw fetchError;
+        const items = await getItems({ ids: sharedThingIds });
         if (!isMounted) return;
-        const items = data ?? [];
         setSharedThingsList(items.filter((i) => i.type === 'thing'));
         setSharedRequestsList(items.filter((i) => i.type === 'request'));
       } catch {

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { supabase } from '../lib/supabaseClient';
+import { getGroupMembershipsForUser, getGroupsByIds } from '../services/groupsService';
 
 /** Groups the given user (e.g. thing owner) is a member of. Used for thing sharing checkboxes. */
 export function useOwnerGroups(ownerId) {
@@ -14,23 +14,14 @@ export function useOwnerGroups(ownerId) {
       try {
         setLoading(true);
         setError(null);
-        const { data: memberRows, error: memberError } = await supabase
-          .from('group_members')
-          .select('group_id')
-          .eq('user_id', ownerId);
-        if (memberError) throw memberError;
+        const memberRows = await getGroupMembershipsForUser(ownerId);
         if (!isMounted) return;
         const groupIds = (memberRows ?? []).map((r) => r.group_id);
         if (groupIds.length === 0) {
           setGroups([]);
           return;
         }
-        const { data: groupData, error: groupError } = await supabase
-          .from('groups')
-          .select('id, name')
-          .in('id', groupIds)
-          .order('name');
-        if (groupError) throw groupError;
+        const groupData = await getGroupsByIds(groupIds, { withInvite: false });
         if (!isMounted) return;
         setGroups(groupData ?? []);
       } catch (err) {

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { supabase } from '../lib/supabaseClient';
+import { getItems } from '../services/itemsService';
+import { getSharesForThings } from '../services/thingsToGroupsService';
 
 export function useAdminRequests() {
   const [requests, setRequests] = useState([]);
@@ -13,13 +14,8 @@ export function useAdminRequests() {
       try {
         setLoading(true);
         setError(null);
-        const { data, error: itemsError } = await supabase
-          .from('items')
-          .select('id, name, description, additional_notes, user_id, type')
-          .eq('type', 'request')
-          .order('name');
+        const data = await getItems({ type: 'request' });
         if (!isMounted) return;
-        if (itemsError) throw itemsError;
         setRequests(data ?? []);
 
         const requestIds = (data ?? []).map((i) => i.id);
@@ -27,12 +23,8 @@ export function useAdminRequests() {
           setGroupCountByRequestId({});
           return;
         }
-        const { data: shares, error: sharesError } = await supabase
-          .from('things_to_groups')
-          .select('thing_id')
-          .in('thing_id', requestIds);
+        const shares = await getSharesForThings(requestIds);
         if (!isMounted) return;
-        if (sharesError) throw sharesError;
         const counts = (shares ?? []).reduce((acc, row) => {
           acc[row.thing_id] = (acc[row.thing_id] ?? 0) + 1;
           return acc;

@@ -1,45 +1,8 @@
-import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { supabase } from '../../lib/supabaseClient';
+import { useUserProfile } from '../../hooks/useUserProfile';
 
 function Owner({ userId }) {
-  const [fullName, setFullName] = useState(null);
-  const [contactInfo, setContactInfo] = useState('');
-  const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    if (!userId) {
-      setFullName(null);
-      setContactInfo('');
-      return;
-    }
-    let isMounted = true;
-    setLoading(true);
-    setFullName(null);
-    setContactInfo('');
-    (async () => {
-      try {
-        const { data, error: fetchError } = await supabase
-          .from('profiles')
-          .select('full_name, contact_info')
-          .eq('id', userId)
-          .maybeSingle();
-        if (!isMounted) return;
-        if (fetchError) throw fetchError;
-        setFullName(data?.full_name?.trim() || null);
-        setContactInfo(data?.contact_info ?? '');
-      } catch {
-        if (!isMounted) return;
-        setFullName(null);
-        setContactInfo('');
-      } finally {
-        if (isMounted) setLoading(false);
-      }
-    })();
-    return () => {
-      isMounted = false;
-    };
-  }, [userId]);
+  const { fullName, contactInfo, loading } = useUserProfile(userId);
 
   if (!userId) return null;
 
@@ -76,3 +39,4 @@ function Owner({ userId }) {
 }
 
 export default Owner;
+

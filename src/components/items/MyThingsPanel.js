@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useOwnerGroups } from '../../hooks/useOwnerGroups';
-import { supabase } from '../../lib/supabaseClient';
+import { deleteItem } from '../../services/itemsService';
+import { getSharesForThings, setThingGroups } from '../../services/thingsToGroupsService';
 import AddItemModal from './AddItemModal';
 import './MyThingsPanel.css';
 
@@ -35,11 +36,7 @@ function MyThingsPanel({
     let isMounted = true;
     (async () => {
       try {
-        const { data, error: fetchError } = await supabase
-          .from('things_to_groups')
-          .select('thing_id')
-          .in('thing_id', thingIds);
-        if (fetchError) throw fetchError;
+        const data = await getSharesForThings(thingIds);
         if (!isMounted) return;
         const countBy = (data ?? []).reduce((acc, row) => {
           acc[row.thing_id] = (acc[row.thing_id] ?? 0) + 1;
@@ -82,12 +79,7 @@ function MyThingsPanel({
     setBulkError(null);
     try {
       for (const thingId of selectedIds) {
-        await supabase.from('things_to_groups').delete().eq('thing_id', thingId);
-        if (bulkSharingGroupIds.length > 0) {
-          await supabase
-            .from('things_to_groups')
-            .insert(bulkSharingGroupIds.map((group_id) => ({ thing_id: thingId, group_id })));
-        }
+        await setThingGroups(thingId, bulkSharingGroupIds);
       }
       setSharedCountByThingId((prev) => {
         const next = { ...prev };
@@ -115,7 +107,7 @@ function MyThingsPanel({
     setBulkDeleteSubmitting(true);
     try {
       for (const thingId of selectedIds) {
-        await supabase.from('items').delete().eq('id', thingId);
+        await deleteItem(thingId);
       }
       setMyThings((prev) => prev.filter((t) => !selectedIds.includes(t.id)));
       setBulkModal(null);

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../../lib/supabaseClient';
+import { addShare, removeShare } from '../../services/thingsToGroupsService';
 import './EditGroupSharingModal.css';
 
 /**
@@ -39,20 +39,12 @@ function EditGroupSharingModal({ type, items = [], sharedThingIds = [], groupId,
     try {
       for (const itemId of initialShared) {
         if (!nowChecked.has(itemId)) {
-          const { error: delErr } = await supabase
-            .from('things_to_groups')
-            .delete()
-            .eq('thing_id', itemId)
-            .eq('group_id', groupId);
-          if (delErr) throw delErr;
+          await removeShare(itemId, groupId);
         }
       }
       for (const itemId of nowChecked) {
         if (!initialShared.has(itemId)) {
-          const { error: insErr } = await supabase
-            .from('things_to_groups')
-            .insert({ thing_id: itemId, group_id: groupId });
-          if (insErr) throw insErr;
+          await addShare(itemId, groupId);
         }
       }
       onSave?.();

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../../lib/supabaseClient';
 import { useOwnerGroups } from '../../hooks/useOwnerGroups';
+import { createItem } from '../../services/itemsService';
+import { setThingGroups } from '../../services/thingsToGroupsService';
 import './AddItemModal.css';
 
 /**
@@ -39,24 +40,15 @@ function AddItemModal({ type, userId, onSuccess, onClose }) {
     setFormError(null);
     setSubmitting(true);
     try {
-      const { data, error: insertError } = await supabase
-        .from('items')
-        .insert({
-          user_id: userId,
-          name: trimmedName,
-          description: description.trim() || null,
-          additional_notes: additionalNotes.trim() || null,
-          type: isThing ? 'thing' : 'request',
-        })
-        .select('id, name, description, additional_notes, user_id, type, created_at')
-        .single();
-
-      if (insertError) throw insertError;
+      const data = await createItem({
+        userId,
+        name: trimmedName,
+        description: description.trim() || '',
+        additionalNotes: additionalNotes.trim() || '',
+        type: isThing ? 'thing' : 'request',
+      });
       if (sharingGroupIds.length > 0) {
-        const { error: shareError } = await supabase.from('things_to_groups').insert(
-          sharingGroupIds.map((group_id) => ({ thing_id: data.id, group_id }))
-        );
-        if (shareError) throw shareError;
+        await setThingGroups(data.id, sharingGroupIds);
       }
       onSuccess?.(data);
       onClose?.();

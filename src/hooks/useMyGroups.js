@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { supabase } from '../lib/supabaseClient';
+import { getGroupMembershipsForUser, getGroupsByIds } from '../services/groupsService';
 
 export function useMyGroups(userId) {
   const [groups, setGroups] = useState([]);
@@ -13,13 +13,8 @@ export function useMyGroups(userId) {
       try {
         setLoading(true);
         setError(null);
-        const { data, error: fetchError } = await supabase
-          .from('group_members')
-          .select('group_id, role')
-          .eq('user_id', userId);
-        if (fetchError) throw fetchError;
+        const memberships = await getGroupMembershipsForUser(userId);
         if (!isMounted) return;
-        const memberships = data ?? [];
         const groupIds = memberships.map((r) => r.group_id);
         const roleByGroupId = {};
         memberships.forEach((m) => {
@@ -29,12 +24,7 @@ export function useMyGroups(userId) {
           setGroups([]);
           return;
         }
-        const { data: groupData, error: groupError } = await supabase
-          .from('groups')
-          .select('id, name, description, is_public, invite_token, created_at')
-          .in('id', groupIds)
-          .order('name');
-        if (groupError) throw groupError;
+        const groupData = await getGroupsByIds(groupIds, { withInvite: true });
         if (!isMounted) return;
         const groupsWithRole = (groupData ?? []).map((g) => ({
           ...g,

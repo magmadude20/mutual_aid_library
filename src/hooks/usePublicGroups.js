@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { supabase } from '../lib/supabaseClient';
+import { getPublicGroupsExcludingUser } from '../services/groupsService';
 
 export function usePublicGroups(userId) {
   const [publicGroups, setPublicGroups] = useState([]);
@@ -12,22 +12,8 @@ export function usePublicGroups(userId) {
       try {
         setLoading(true);
         setError(null);
-        const { data, error: fetchError } = await supabase
-          .from('groups')
-          .select('id, name, description, invite_token, latitude, longitude')
-          .eq('is_public', true)
-          .order('name');
-        if (fetchError) throw fetchError;
+        const list = await getPublicGroupsExcludingUser(userId);
         if (!isMounted) return;
-        let list = data ?? [];
-        if (userId) {
-          const { data: myMemberships } = await supabase
-            .from('group_members')
-            .select('group_id')
-            .eq('user_id', userId);
-          const myIds = new Set((myMemberships ?? []).map((r) => r.group_id));
-          list = list.filter((g) => !myIds.has(g.id));
-        }
         setPublicGroups(list);
       } catch (err) {
         if (!isMounted) return;

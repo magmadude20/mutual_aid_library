@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
+import { getProfileById } from '../services/profilesService';
 
 export function useGroupMembers(groupId) {
   const [members, setMembers] = useState([]);
@@ -22,11 +23,7 @@ export function useGroupMembers(groupId) {
         if (!isMounted) return;
         const withProfiles = await Promise.all(
           (data ?? []).map(async (m) => {
-            const { data: profile } = await supabase
-              .from('profiles')
-              .select('full_name')
-              .eq('id', m.user_id)
-              .maybeSingle();
+            const profile = await getProfileById(m.user_id);
             return { ...m, full_name: profile?.full_name?.trim() || null };
           })
         );

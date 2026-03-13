@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { supabase } from '../lib/supabaseClient';
+import { getProfileById } from '../services/profilesService';
 
 export function useUserProfile(userId) {
   const [profile, setProfile] = useState(null);
@@ -13,13 +13,8 @@ export function useUserProfile(userId) {
     setError(null);
     (async () => {
       try {
-        const { data, error: fetchError } = await supabase
-          .from('profiles')
-          .select('full_name, contact_info')
-          .eq('id', userId)
-          .maybeSingle();
+        const data = await getProfileById(userId);
         if (!isMounted) return;
-        if (fetchError) throw fetchError;
         setProfile(data);
       } catch (err) {
         if (!isMounted) return;

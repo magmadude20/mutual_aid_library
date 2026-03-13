@@ -9,16 +9,34 @@ function AboutPage({ user }) {
       <section className="about-section" aria-labelledby="about-what-heading">
         <h3 id="about-what-heading" className="about-heading">What is this site?</h3>
         <p className="about-text">
-          Mutual Aid Library of Things is for <strong>sharing stuff for free</strong>. It works like a
-          library of things: list what you have to share or what you need, and connect with others in
-          your groups to borrow, lend, or help out—no money involved.
+          It helps friends and neighbors share stuff with each other.
+          <br />
+          The goal is to create <a href="https://www.shareable.net/programs/library-of-things/" target="_blank" rel="noopener noreferrer">
+          <strong>libraries of things</strong>
+          </a> that get better as more people join them.
+          <br />
+          You can list what you have to share or what you need, and connect with others in
+          your groups to borrow, lend, or help out.
+          <br />
+          <br />
+          It's stupid that everyone has stuff they only use occasionally.
+          <br />
+          Like, it just doesn't make sense for everyone to have lawn mower that they MAYBE use once a week.
+          Just share one between a few folks, ya know?
+          <br />
+          Or like... tools. How often do you use your shovel? Does everyone need their own shovel? Probably not.
+          <br />
+          Share stuff because it saves money. Or because it's less wasteful. Or because it's nice or whatever.
         </p>
       </section>
 
       <section className="about-section" aria-labelledby="about-uses-heading">
         <h3 id="about-uses-heading" className="about-heading">Who is it for?</h3>
         <p className="about-text">
-          The site works for many kinds of groups, including:
+          Anyone that wants to save money, be less wasteful, and/or build their community.
+          <br />
+          <br />
+          Groups could be for:
         </p>
         <ul className="about-list">
           <li>Neighbors and neighborhood groups</li>
@@ -27,8 +45,8 @@ function AboutPage({ user }) {
           <li>Local organizations, co-ops, and mutual aid networks</li>
         </ul>
         <p className="about-text">
-          You don't need to be in just one group—you can be part of multiple groups and choose which
-          things you share with which groups.
+          You don't need to be in just one group, and you can control which things you share with which groups
+          (e.g. if you only trust your friends with your camera, you can share it with them and only them.)
         </p>
       </section>
 
@@ -55,17 +73,34 @@ function AboutPage({ user }) {
       <section className="about-section" aria-labelledby="about-privacy-heading">
         <h3 id="about-privacy-heading" className="about-heading">Privacy</h3>
         <p className="about-text">
-          When you contact someone (e.g. to request a thing or respond to a request), your message is
-          sent by email. The other person will see your email when they reply so you can arrange the
-          exchange. The site does not share your email with other members until you choose to contact
-          them.
+          Other folks can't see your email address until you reach out to them.
+          If you don't do anything, your email address is not shared with other folks.
+          <br />
+          Other users can only see your email address when you reach out to them or you reply to their email.
+          Once you do, we send
+          and email to them with your email address so that they can reply to you.
+
+          Again, your email will not be shared with other members until you choose to contact them.
+        </p>
+      </section>
+
+      <section className="about-section" aria-labelledby="about-breakage-heading">
+        <h3 id="about-breakage-heading" className="about-heading">What if something is stolen or breaks?</h3>
+        <p className="about-text">
+          I'm sorry, but you're on your own.
+          <br />
+          Only lend to folks you trust. Or lend things you're willing to replace.
+          <br />
+          Keep in mind that <strong>you can share certain things with only a few groups</strong>, and other things more broadly.
+          <br />
+          Be nice and be responsible.
         </p>
       </section>
 
       <section className="about-section" aria-labelledby="about-feedback-heading">
         <h3 id="about-feedback-heading" className="about-heading">Feedback</h3>
         <p className="about-text">
-          Questions or feedback? Use the Feedback link in the footer to get in touch.
+          Questions or feedback? Reach out to {process.env.REACT_APP_FEEDBACK_EMAIL || 'an admin'}.
         </p>
       </section>
 

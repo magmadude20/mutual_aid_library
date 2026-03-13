@@ -17,16 +17,6 @@ function AboutPage({ user }) {
           <br />
           You can list what you have to share or what you need, and connect with others in
           your groups to borrow, lend, or help out.
-          <br />
-          <br />
-          It's stupid that everyone has stuff they only use occasionally.
-          <br />
-          Like, it just doesn't make sense for everyone to have lawn mower that they MAYBE use once a week.
-          Just share one between a few folks, ya know?
-          <br />
-          Or like... tools. How often do you use your shovel? Does everyone need their own shovel? Probably not.
-          <br />
-          Share stuff because it saves money. Or because it's less wasteful. Or because it's nice or whatever.
         </p>
       </section>
 
@@ -35,18 +25,32 @@ function AboutPage({ user }) {
         <p className="about-text">
           Anyone that wants to save money, be less wasteful, and/or build their community.
           <br />
+          It's probably more convienent for some stuff, too. Maybe save you a trip to the store. That'd be neat.
           <br />
-          Groups could be for:
+          <br />
+          YOU could be the friend with the printer.
+          <br />
+          YOU could be the person with the board game.
+          <br />
+          YOU could be the neighbor with the wheelbarrow that saves someone a trip to the store!
+          <br />
+          Borrow a pickle ball set! Or a folding table! Or a pressure washer! Or a pop up tent!
+          <br />
+          Anyway. Hopefully, it's for most people.
+          <br />
+          <br />
+          Create or join groups for:
         </p>
         <ul className="about-list">
-          <li>Neighbors and neighborhood groups</li>
           <li>Friends and family</li>
+          <li>Neighbors</li>
           <li>Church or faith communities</li>
+          <li>Hobby or interest groups</li>
           <li>Local organizations, co-ops, and mutual aid networks</li>
         </ul>
         <p className="about-text">
-          You don't need to be in just one group, and you can control which things you share with which groups
-          (e.g. if you only trust your friends with your camera, you can share it with them and only them.)
+          Join multiple groups, and control which things you share with which groups
+          (e.g. if you only trust your friends with your camera, you can share it with only them.)
         </p>
       </section>
 

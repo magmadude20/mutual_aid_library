@@ -56,6 +56,7 @@ function GroupDetailPage({ user }) {
   const [editRequestsSharingOpen, setEditRequestsSharingOpen] = useState(false);
   const [memberMenuOpen, setMemberMenuOpen] = useState(null);
   const [confirmMakeAdmin, setConfirmMakeAdmin] = useState(null);
+  const [confirmMakeMember, setConfirmMakeMember] = useState(null);
   const [confirmRemoveMember, setConfirmRemoveMember] = useState(null);
   const [memberActionSubmitting, setMemberActionSubmitting] = useState(false);
   const [memberActionError, setMemberActionError] = useState(null);
@@ -256,6 +257,26 @@ function GroupDetailPage({ user }) {
         .eq('user_id', confirmMakeAdmin.userId);
       if (updateError) throw updateError;
       setConfirmMakeAdmin(null);
+      refetchMembers();
+    } catch (err) {
+      setMemberActionError(err.message || 'Failed to update role.');
+    } finally {
+      setMemberActionSubmitting(false);
+    }
+  }
+
+  async function handleMakeMemberConfirm() {
+    if (!confirmMakeMember?.userId || !groupId) return;
+    setMemberActionError(null);
+    setMemberActionSubmitting(true);
+    try {
+      const { error: updateError } = await supabase
+        .from('group_members')
+        .update({ role: 'MEMBER' })
+        .eq('group_id', groupId)
+        .eq('user_id', confirmMakeMember.userId);
+      if (updateError) throw updateError;
+      setConfirmMakeMember(null);
       refetchMembers();
     } catch (err) {
       setMemberActionError(err.message || 'Failed to update role.');
@@ -606,6 +627,20 @@ function GroupDetailPage({ user }) {
                                 }}
                               >
                                 Make admin
+                              </button>
+                            )}
+                            {m.role === 'ADMIN' && adminCount > 1 && (
+                              <button
+                                type="button"
+                                role="menuitem"
+                                className="member-menu-item"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setConfirmMakeMember({ userId: m.user_id, fullName: m.full_name || 'this user' });
+                                  setMemberMenuOpen(null);
+                                }}
+                              >
+                                Make member
                               </button>
                             )}
                             <button
@@ -976,6 +1011,48 @@ function GroupDetailPage({ user }) {
                 disabled={memberActionSubmitting}
               >
                 {memberActionSubmitting ? 'Updating…' : 'Make admin'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {confirmMakeMember && (
+        <div
+          className="modal-overlay"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="make-member-modal-title"
+        >
+          <div className="modal-card">
+            <h3 id="make-member-modal-title" className="modal-title">
+              Make {confirmMakeMember.fullName} a member?
+            </h3>
+            <p className="modal-text">
+              They will keep access to the group but will no longer be able to edit the group, review membership requests, or manage members.
+            </p>
+            {memberActionError && (
+              <p className="form-error modal-error" role="alert">{memberActionError}</p>
+            )}
+            <div className="modal-actions">
+              <button
+                type="button"
+                className="header-button"
+                onClick={() => {
+                  setConfirmMakeMember(null);
+                  setMemberActionError(null);
+                }}
+                disabled={memberActionSubmitting}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="submit-button"
+                onClick={handleMakeMemberConfirm}
+                disabled={memberActionSubmitting}
+              >
+                {memberActionSubmitting ? 'Updating…' : 'Make member'}
               </button>
             </div>
           </div>

@@ -721,7 +721,11 @@ function GroupDetailPage({ user }) {
               Delete group
             </button>
           </div>
-          <p className="group-detail-admin-actions-label">
+          <p
+            className={
+              pendingCount > 0 ? 'group-detail-admin-actions-label pending-requests-accent' : 'group-detail-admin-actions-label'
+            }
+          >
             {pendingLoading
               ? 'Checking membership requests…'
               : `${pendingCount} pending membership request${pendingCount === 1 ? '' : 's'}`}
@@ -729,7 +733,7 @@ function GroupDetailPage({ user }) {
           <div className="group-detail-admin-actions">
             <button
               type="button"
-              className={pendingCount > 0 ? 'header-button primary-button' : 'header-button'}
+              className={pendingCount > 0 ? 'header-button pending-requests-button' : 'header-button'}
               onClick={() => setPendingModalOpen(true)}
               disabled={pendingLoading}
             >

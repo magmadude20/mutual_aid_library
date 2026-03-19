@@ -1,10 +1,13 @@
 import { Outlet, useLocation, NavLink, Link } from 'react-router-dom';
+import { useAdminPendingMembershipRequestsCount } from '../hooks/useAdminPendingMembershipRequestsCount';
 
 function Layout({ user, logout }) {
   const location = useLocation();
   const pathname = location.pathname;
   const hideTabs =
     !user || pathname.startsWith('/join/') || pathname.startsWith('/admin');
+
+  const { count: adminPendingCount } = useAdminPendingMembershipRequestsCount(user?.id);
 
   return (
     <div className="App">
@@ -53,7 +56,14 @@ function Layout({ user, logout }) {
               id="groups-tab"
               className={({ isActive }) => `tab ${isActive ? 'tab-active' : ''}`}
             >
-              Groups
+              <span>Groups</span>
+              {user?.id && adminPendingCount > 0 && (
+                <span
+                  className="tab-pending-dot"
+                  aria-label={`${adminPendingCount} pending requests`}
+                  title={`${adminPendingCount} pending requests`}
+                />
+              )}
             </NavLink>
             {user?.id && (
               <NavLink

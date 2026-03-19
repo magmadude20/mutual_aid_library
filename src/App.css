@@ -103,6 +103,22 @@
   font-weight: 600;
 }
 
+.tab-pending-dot {
+  display: inline-block;
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 999px;
+  background: #f59e0b;
+  margin-left: 0.35rem;
+  transform: translateY(0.1rem);
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
+.tab-pending-dot::after {
+  content: '';
+}
+
 .tab-panel {
   outline: none;
 }

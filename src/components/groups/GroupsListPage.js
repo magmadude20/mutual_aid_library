@@ -3,11 +3,14 @@ import { Link } from 'react-router-dom';
 import { useMyGroups } from '../../hooks/useMyGroups';
 import { usePublicGroups } from '../../hooks/usePublicGroups';
 import { useGroupCounts } from '../../hooks/useGroupCounts';
+import { useAdminPendingMembershipRequestsCountByGroup } from '../../hooks/useAdminPendingMembershipRequestsCountByGroup';
 import './GroupsListPage.css';
 
 function GroupsListPage({ user }) {
   const { groups, loading, error } = useMyGroups(user?.id);
   const { publicGroups, loading: publicLoading, error: publicError } = usePublicGroups(user?.id);
+  const { countByGroupId: pendingRequestsByGroupId, loading: pendingRequestsLoading } =
+    useAdminPendingMembershipRequestsCountByGroup(user?.id);
   const allGroupIds = useMemo(
     () => [...groups.map((g) => g.id), ...publicGroups.map((g) => g.id)],
     [groups, publicGroups]
@@ -41,6 +44,12 @@ function GroupsListPage({ user }) {
                 {g.description && <span className="group-description">{g.description}</span>}
                 <span className="group-card-summary">
                   {memberCountByGroupId[g.id] ?? 0} users sharing {thingCountByGroupId[g.id] ?? 0} items
+                  {!pendingRequestsLoading && (pendingRequestsByGroupId[g.id] ?? 0) > 0 && (
+                    <span className="group-card-pending">
+                      {pendingRequestsByGroupId[g.id]} pending request
+                      {pendingRequestsByGroupId[g.id] === 1 ? '' : 's'}
+                    </span>
+                  )}
                 </span>
               </Link>
             </li>

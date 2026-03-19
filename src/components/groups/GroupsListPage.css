@@ -2,6 +2,14 @@
   padding-top: 0.25rem;
 }
 
+.group-card-pending {
+  display: block;
+  margin-top: 0.35rem;
+  color: #f59e0b;
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
 .groups-list-header {
   display: flex;
   align-items: center;

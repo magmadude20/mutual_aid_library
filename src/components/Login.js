@@ -43,7 +43,7 @@ function Login() {
             full_name: trimmedName,
           });
         }
-        setMessage('Check your email to confirm your account (if confirmations are enabled).');
+        setMessage('Check your email to confirm your account');
       }
     } catch (err) {
       setError(err.message || 'Something went wrong. Please try again.');

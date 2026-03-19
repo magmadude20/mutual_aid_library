@@ -1,6 +1,6 @@
 # Disclaimer
 
-This project is 99% done by AI.
+The code is 99% done by AI.
 
 I've been a software engineer for a decade, but it was at a megacorp with its own infrastructure and I don't know how to operate in the real world.\
 Futhermore, I exclusively worked on backends.
@@ -9,7 +9,7 @@ I don't know react. I don't know javascript. I don't know css. I don't know supa
 
 [I do not know best practices for any of this](https://media1.tenor.com/m/cq_SQD8rA9sAAAAd/itysl-i-think-you-should-leave.gif), and the code shouldn't be used as an example for ANYTHING.
 
-Hopefully, the app itself is useful.
+Hopefully, the app itself is useful. If so, a rewrite is warranted.
 
 # Mutual Aid Library of Things
 
@@ -25,9 +25,30 @@ React app connected to Supabase for storage.
 
 * ~~Support for groups, e.g. so you can share with just your immediate neighbors~~ (done: create groups, invite link, share things with groups, browse public groups)
 * Just generally better UI
-* Integrate sending requests instead of users providing contact info
+* ~~Integrate sending requests instead of users providing contact info~~
 * Searching or filtering thing list based on distance
 * Support adding pictures of things
+
+# Stuff used / setup instructions
+
+* Supabase
+  * Create project & database with... the right schema? idk I'll need to figure out how to export that so you can import it. The migrations are mostly right, but I also made changes outside of them.
+  * Copy project URL and api key. Put them in your .env.local and vercel
+* Vercel
+  * Connect project to your github
+  * Project Settings -> Environment Variables
+    * REACT_APP_FEEDBACK_EMAIL: your email
+    * REACT_APP_SUPABASE_URL: from supabase
+    * REACT_APP_SUPABASE_ANON_KEY: from supabase
+  * Add your domain (or just use theirs, but you'll probably hit supabase email quotas)
+  * ... done?
+* Resend
+  * Connect/verify your domain
+  * Give API key to supabase
+    * For sending request emails: Edge Functions -> Secrets -> RESEND_API_KEY
+      * Note: We might eventually make a real backend and not rely on supabase edge functions 
+    * For signup emails: Notifications -> Email -> SMTP settings (see [here](https://resend.com/docs/send-with-smtp) for instructions)
+      * Also [change your URL configuration](https://supabase.com/docs/guides/auth/redirect-urls) from localhost:3000
 
 Below is some AI stuff that's hopefully useful.
 

@@ -1,4 +1,3 @@
-import { useEffect, useRef } from 'react';
 import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { useAuth } from './hooks/useAuth';
 import { useThings } from './hooks/useThings';
@@ -30,25 +29,7 @@ function App() {
   const { myRequests, setMyRequests, loading: myRequestsLoading, error: myRequestsError } = useMyRequests(user?.id);
 
   const navigate = useNavigate();
-  const { groups: myGroups, loading: myGroupsLoading } = useMyGroups(user?.id);
-  const hasRedirectedNoGroupsToGroups = useRef(false);
-
-  // If user logged in without an invite (not on /join/:token) and has no groups, send them to Groups page once; then they can switch tabs freely
-  useEffect(() => {
-    if (!user) {
-      hasRedirectedNoGroupsToGroups.current = false;
-      return;
-    }
-    if (myGroupsLoading || hasRedirectedNoGroupsToGroups.current) return;
-    const path = location.pathname;
-    const isJoinPage = path.startsWith('/join/');
-    const isGroupsArea = path === '/groups' || path.startsWith('/groups/');
-    const isAboutPage = path === '/';
-    if (!isJoinPage && !isGroupsArea && !isAboutPage && myGroups.length === 0) {
-      hasRedirectedNoGroupsToGroups.current = true;
-      navigate('/groups', { replace: true });
-    }
-  }, [user, myGroupsLoading, myGroups.length, location.pathname, navigate]);
+  const { groups: myGroups } = useMyGroups(user?.id);
 
   if (authLoading) {
     return (

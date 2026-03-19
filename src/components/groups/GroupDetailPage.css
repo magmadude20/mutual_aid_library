@@ -53,6 +53,20 @@
   color: #9ca3af;
 }
 
+.pending-requests-accent {
+  color: #f59e0b;
+}
+
+.pending-requests-button {
+  border-color: #f59e0b;
+  color: #fde68a;
+  background: rgba(245, 158, 11, 0.12);
+}
+
+.pending-requests-button:hover:not(:disabled) {
+  background: rgba(245, 158, 11, 0.22);
+}
+
 .group-detail-admin-actions {
   display: flex;
   flex-wrap: wrap;
